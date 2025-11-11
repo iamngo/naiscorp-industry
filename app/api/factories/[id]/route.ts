@@ -3,6 +3,7 @@ import {
   deleteFactory,
   getFactory,
   updateFactory,
+  addAdminLog,
 } from '@/lib/mockStore';
 
 type FactoryRouteContext = {
@@ -65,6 +66,30 @@ export async function PUT(
         ? (typeof body.longitude === 'number' ? body.longitude : parseFloat(body.longitude) || factory.longitude)
         : factory.longitude,
       updatedAt: new Date().toISOString(),
+    });
+
+    if (!updatedFactory) {
+      console.error('[API] update factory returned undefined', { id });
+      return NextResponse.json(
+        { success: false, error: 'Unable to update factory' },
+        { status: 500 },
+      );
+    }
+
+    await addAdminLog({
+      id: `log-${Date.now()}`,
+      adminId: 'user-1',
+      action: 'update_factory',
+      entityType: 'factory',
+      entityId: id,
+      details: {
+        updatedFields: Object.keys(body),
+        previousVerification: factory.verificationStatus,
+        newVerification: updatedFactory.verificationStatus,
+        esgStatus: updatedFactory.esgStatus,
+        digitalTransformation: updatedFactory.digitalTransformation,
+      },
+      createdAt: new Date().toISOString(),
     });
 
     return NextResponse.json({

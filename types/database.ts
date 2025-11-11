@@ -139,6 +139,10 @@ export interface Supplier {
   website?: string;
   createdAt: string;
   updatedAt: string;
+  rating?: number;
+  reviewCount?: number;
+  regions?: string[];
+  headquarters?: string;
 }
 
 // Buyer
@@ -321,5 +325,30 @@ export interface AdminLog {
   entityId: string;
   details: Record<string, any>;
   createdAt: string;
+}
+
+export interface BuyerLead {
+  id: string;
+  company: string;
+  industries: string[];
+  opportunities: number;
+  stage: string;
+  value: number;
+  lastContact: string;
+}
+
+export interface InvestorDeal {
+  id: string;
+  fundName: string;
+  focus: string[];
+  budget: string;
+  status: string;
+  owner: string;
+}
+
+export interface ReportHighlight {
+  title: string;
+  value: number;
+  change: string;
 }
 

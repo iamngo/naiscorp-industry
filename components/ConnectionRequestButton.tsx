@@ -7,12 +7,16 @@ interface ConnectionRequestButtonProps {
   targetId: string;
   targetRole: 'iz' | 'factory' | 'supplier' | 'buyer';
   targetName: string;
+  fromUserId?: string;
+  fromRole?: 'iz' | 'factory' | 'supplier' | 'buyer' | 'investor';
 }
 
 export default function ConnectionRequestButton({
   targetId,
   targetRole,
   targetName,
+  fromUserId = 'user-current',
+  fromRole = 'investor',
 }: ConnectionRequestButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
@@ -29,6 +33,8 @@ export default function ConnectionRequestButton({
         body: JSON.stringify({
           toUserId: targetId,
           toRole: targetRole,
+          fromUserId,
+          fromRole,
           message: message,
         }),
       });

@@ -1,4 +1,4 @@
-import { IndustrialZone, Factory, Product, Service, Region, Cluster, Consultant } from '@/types/database';
+import { IndustrialZone, Factory, Product, Service, Region, Cluster, Consultant, Supplier } from '@/types/database';
 
 // ===== Consultants =====
 export const mockConsultants: Consultant[] = [
@@ -380,6 +380,76 @@ export const mockFactories: Factory[] = [
   },
 ];
 
+// ===== Suppliers =====
+export const mockSuppliers: Supplier[] = [
+  {
+    id: 'supp-1',
+    userId: 'user-31',
+    companyName: 'Công ty Dệt May Hòa Bình',
+    businessLicense: '0301234567',
+    industries: ['Dệt may'],
+    services: ['training', 'consumables'],
+    products: ['Vải Cotton 100%', 'Vải Denim cao cấp'],
+    verificationStatus: 'verified',
+    verifiedAt: '2024-02-15T00:00:00Z',
+    verifiedBy: 'user-1',
+    isStrategicPartner: true,
+    rating: 4.7,
+    reviewCount: 124,
+    regions: ['Miền Nam'],
+    description:
+      'Nhà cung ứng vải xuất khẩu với hệ thống nhuộm – hoàn tất đạt chuẩn OEKO-TEX, chuyên phối hợp cùng các nhà máy may FOB tại Bình Dương.',
+    contactEmail: 'sales@hoabinh-textile.vn',
+    contactPhone: '028-555-8888',
+    website: 'https://hoabinh-textile.vn',
+    createdAt: '2024-01-12T00:00:00Z',
+    updatedAt: '2024-03-04T00:00:00Z',
+  },
+  {
+    id: 'supp-2',
+    userId: 'user-32',
+    companyName: 'LogiHub Việt Nam',
+    industries: ['Logistics', 'Kho bãi'],
+    services: ['logistics', 'event'],
+    products: ['Dịch vụ kho bãi 3PL', 'Giải pháp fulfillment xuyên biên giới'],
+    verificationStatus: 'verified',
+    verifiedAt: '2024-03-02T00:00:00Z',
+    verifiedBy: 'user-1',
+    isStrategicPartner: false,
+    rating: 4.5,
+    reviewCount: 87,
+    regions: ['Miền Nam', 'Miền Bắc'],
+    description:
+      'Đơn vị logistics 3PL với mạng lưới kho tại VSIP, ICD Sóng Thần và hệ thống quản lý WMS tích hợp API với các sàn TMĐT.',
+    contactEmail: 'hello@logihub.vn',
+    contactPhone: '028-6666-9090',
+    website: 'https://logihub.vn',
+    createdAt: '2024-01-20T00:00:00Z',
+    updatedAt: '2024-03-01T00:00:00Z',
+    businessLicense: '0315567788',
+  },
+  {
+    id: 'supp-3',
+    userId: 'user-33',
+    companyName: 'GreenTech Energy',
+    industries: ['Năng lượng', 'Tư vấn'],
+    services: ['energy', 'training'],
+    products: ['Tư vấn chuyển đổi năng lượng xanh'],
+    verificationStatus: 'pending',
+    isStrategicPartner: false,
+    rating: 4.3,
+    reviewCount: 42,
+    regions: ['Miền Trung'],
+    description:
+      'Đội ngũ kỹ sư triển khai giải pháp năng lượng tái tạo, lưu trữ và tối ưu chi phí điện cho các nhà máy công nghiệp.',
+    contactEmail: 'contact@greentech.vn',
+    contactPhone: '024-7788-8899',
+    website: 'https://greentech.vn',
+    createdAt: '2024-02-05T00:00:00Z',
+    updatedAt: '2024-02-26T00:00:00Z',
+  },
+];
+
 // ===== Products (Marketplace) =====
 export const mockProducts: Product[] = [
   {
@@ -431,6 +501,69 @@ export const mockProducts: Product[] = [
     updatedAt: '2024-02-25T00:00:00Z',
   },
 ];
+
+export const mockBuyerLeads = [
+  {
+    id: 'buyer-1',
+    company: 'Công ty Thương mại Bắc Ninh',
+    industries: ['Điện tử', 'Cơ khí'],
+    opportunities: 3,
+    stage: 'Đàm phán',
+    value: 2300000,
+    lastContact: '2025-11-09T04:15:00Z',
+  },
+  {
+    id: 'buyer-2',
+    company: 'Tập đoàn Thực phẩm Mekong',
+    industries: ['Thực phẩm'],
+    opportunities: 2,
+    stage: 'Đang quan tâm',
+    value: 750000,
+    lastContact: '2025-11-08T16:00:00Z',
+  },
+  {
+    id: 'buyer-3',
+    company: 'Công ty Ô tô Việt Đức',
+    industries: ['Logistics', 'Cơ khí'],
+    opportunities: 4,
+    stage: 'Đã ký',
+    value: 4500000,
+    lastContact: '2025-11-07T09:30:00Z',
+  },
+] as const;
+
+export const mockInvestorDeals = [
+  {
+    id: 'investor-1',
+    fundName: 'ASEAN Growth Fund',
+    focus: ['Điện tử', 'Năng lượng'],
+    budget: '$25M',
+    status: 'Đánh giá',
+    owner: 'Nguyễn Văn Khánh',
+  },
+  {
+    id: 'investor-2',
+    fundName: 'Pacific Manufacturing Partners',
+    focus: ['Cơ khí', 'Logistics'],
+    budget: '$40M',
+    status: 'Hẹn gặp',
+    owner: 'Trần Lan Hương',
+  },
+  {
+    id: 'investor-3',
+    fundName: 'Green Transition Capital',
+    focus: ['Năng lượng', 'ESG'],
+    budget: '$60M',
+    status: 'Ký NDA',
+    owner: 'Phạm Quốc Anh',
+  },
+] as const;
+
+export const mockReportHighlights = [
+  { title: 'Leads mới tuần này', value: 18, change: '+12%' },
+  { title: 'RFQ đang mở', value: 9, change: '+4%' },
+  { title: 'Cuộc gọi tư vấn đã đặt', value: 7, change: '+2' },
+] as const;
 
 // ===== Services (Industrial Services Hub) =====
 export const mockServices: Service[] = [
@@ -512,6 +645,14 @@ export const getFactoriesByIZId = (izId: string): Factory[] => {
 
 export const getFactoryById = (id: string): Factory | undefined => {
   return mockFactories.find((factory) => factory.id === id);
+};
+
+export const getSupplierById = (id: string): Supplier | undefined => {
+  return mockSuppliers.find((supplier) => supplier.id === id);
+};
+
+export const getSuppliers = (): Supplier[] => {
+  return mockSuppliers;
 };
 
 export const getProductsBySupplierId = (supplierId: string): Product[] => {

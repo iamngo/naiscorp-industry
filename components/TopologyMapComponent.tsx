@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polygon, Polyline } from 'react-leaflet';
+import { useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon, Polyline, CircleMarker, Tooltip, Pane } from 'react-leaflet';
 import L from 'leaflet';
 import { IndustrialZone, Factory, Cluster, Region, TopologyLevel } from '@/types/database';
-import { MapPin, CheckCircle, Leaf, Cpu, Factory as FactoryIcon, Building2, Users } from 'lucide-react';
+import { CheckCircle, Leaf, Cpu, Network } from 'lucide-react';
 import Link from 'next/link';
-import { mockRegions, getFactoriesByIZId, getClustersByIZId } from '@/lib/mockData';
+import { mockRegions } from '@/lib/mockData';
 
 // Load Leaflet CSS
 if (typeof window !== 'undefined') {
@@ -212,6 +212,36 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
     });
   };
 
+  const createClusterIcon = (cluster: Cluster) => {
+    const isSelected = selectedCluster === cluster.id;
+    const size = isSelected ? 34 : 28;
+    const border = isSelected ? 3 : 2;
+
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="
+          background: linear-gradient(135deg, #0ea5e9, #6366f1);
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 14px;
+          border: ${border}px solid rgba(255,255,255,0.85);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 18px rgba(79, 70, 229, 0.35);
+          color: #fff;
+          font-weight: 700;
+          font-size: ${isSelected ? '12px' : '11px'};
+        ">
+          C
+        </div>
+      `,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    });
+  };
+
   // Create region polygon
   const createRegionPolygon = (region: Region) => {
     const boundary = regionBoundaries[region.id];
@@ -244,27 +274,142 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
     );
   };
 
-  // Create flow line (simple implementation)
-  const createFlowLine = (from: [number, number], to: [number, number]) => {
-    return L.polyline([from, to], {
-      color: '#10B981',
-      weight: 2,
-      opacity: 0.6,
-      dashArray: '5, 10',
+  const regionCenters = useMemo(() => {
+    return regions.reduce<Record<string, [number, number]>>((acc, region) => {
+      const boundary = regionBoundaries[region.id];
+      if (!boundary) return acc;
+      const latSum = boundary.reduce((sum, point) => sum + point[0], 0);
+      const lngSum = boundary.reduce((sum, point) => sum + point[1], 0);
+      acc[region.id] = [latSum / boundary.length, lngSum / boundary.length];
+      return acc;
+    }, {});
+  }, [regions]);
+
+  const clustersByIZ = useMemo(() => {
+    return clusters.reduce<Record<string, Cluster[]>>((acc, cluster) => {
+      if (!acc[cluster.izId]) {
+        acc[cluster.izId] = [];
+      }
+      acc[cluster.izId].push(cluster);
+      return acc;
+    }, {});
+  }, [clusters]);
+
+  const clusterPositions = useMemo(() => {
+    const positions = new Map<string, [number, number]>();
+
+    clusters.forEach((cluster) => {
+      const iz = izs.find((item) => item.id === cluster.izId);
+      if (!iz) return;
+      const siblings = clustersByIZ[cluster.izId];
+      const index = siblings.findIndex((item) => item.id === cluster.id);
+      const angle = (index / Math.max(siblings.length, 1)) * Math.PI * 2;
+      const radius = 0.04; // degrees ~4-5km
+      const lat = iz.latitude + Math.sin(angle) * radius;
+      const lng = iz.longitude + Math.cos(angle) * radius;
+      positions.set(cluster.id, [lat, lng]);
     });
-  };
+
+    return positions;
+  }, [clusters, clustersByIZ, izs]);
+
+  const flowLines = useMemo(() => {
+    const lines: Array<{
+      id: string;
+      points: [number, number][];
+      color: string;
+      weight: number;
+      dashArray?: string;
+    }> = [];
+
+    if (!showFlowLines) {
+      return lines;
+    }
+
+    // Region -> IZ lines
+    izs.forEach((iz) => {
+      if (!iz.regionId) return;
+      const regionCenter = regionCenters[iz.regionId];
+      if (!regionCenter) return;
+      lines.push({
+        id: `region-${iz.regionId}-iz-${iz.id}`,
+        points: [regionCenter, [iz.latitude, iz.longitude]],
+        color: '#38bdf8',
+        weight: 2,
+        dashArray: '10 10',
+      });
+    });
+
+    // IZ -> Cluster lines
+    clusters.forEach((cluster) => {
+      const iz = izs.find((item) => item.id === cluster.izId);
+      if (!iz) return;
+      const clusterPosition = clusterPositions.get(cluster.id);
+      if (!clusterPosition) return;
+
+      lines.push({
+        id: `iz-${cluster.izId}-cluster-${cluster.id}`,
+        points: [
+          [iz.latitude, iz.longitude],
+          clusterPosition,
+        ],
+        color: '#818cf8',
+        weight: 2.5,
+      });
+    });
+
+    // Cluster/IZ -> Factory lines
+    factories.forEach((factory) => {
+      const iz = izs.find((item) => item.id === factory.izId);
+      if (!iz) return;
+      if (factory.clusterId) {
+        const clusterPosition = clusterPositions.get(factory.clusterId);
+        if (clusterPosition) {
+          lines.push({
+            id: `cluster-${factory.clusterId}-factory-${factory.id}`,
+            points: [clusterPosition, [factory.latitude, factory.longitude]],
+            color: '#fb923c',
+            weight: 1.6,
+          });
+          return;
+        }
+      }
+
+      lines.push({
+        id: `iz-${factory.izId}-factory-${factory.id}`,
+        points: [
+          [iz.latitude, iz.longitude],
+          [factory.latitude, factory.longitude],
+        ],
+        color: '#facc15',
+        weight: 1.4,
+        dashArray: '6 6',
+      });
+    });
+
+    return lines;
+  }, [clusters, clusterPositions, factories, izs, regionCenters, showFlowLines]);
 
   return (
     <MapContainer
       center={defaultCenter}
       zoom={defaultZoom}
-      style={{ height: '100%', width: '100%' }}
+      style={{
+        height: '100%',
+        width: '100%',
+        background: '#f8fafc',
+      }}
       scrollWheelZoom={true}
       key={`map-${level}-${selectedIZ}`}
+      className="topology-map-container"
     >
+      <Pane name="topology-background" style={{ zIndex: 50 }}>
+        <div className="topology-grid-overlay" />
+      </Pane>
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution=""
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        opacity={0.55}
       />
       
       <MapController 
@@ -275,8 +420,45 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
         level={level}
       />
 
-      {/* Region Level - Show Region Boundaries */}
-      {level === 'region' && regions && regions.map((region) => createRegionPolygon(region)).filter(Boolean)}
+      {/* Draw topology flow lines */}
+      {flowLines.map(line => (
+        <Polyline
+          key={line.id}
+          positions={line.points}
+          pathOptions={{
+            color: line.color,
+            weight: line.weight,
+            opacity: 0.6,
+            dashArray: line.dashArray,
+          }}
+        />
+      ))}
+
+      {/* Region Level - Show Region Boundaries and centroids */}
+      {level === 'region' && regions.map((region) => createRegionPolygon(region)).filter(Boolean)}
+      {level === 'region' && regions.map(region => {
+        const center = regionCenters[region.id];
+        if (!center) return null;
+        return (
+          <CircleMarker
+            key={`${region.id}-center`}
+            center={center}
+            radius={20}
+            pathOptions={{
+              color: '#38bdf8',
+              fillColor: '#38bdf8',
+              fillOpacity: 0.12,
+              weight: 2,
+            }}
+          >
+            <Tooltip direction="center" permanent className="!bg-transparent !border-0 !shadow-none">
+              <div className="rounded-xl bg-sky-500 text-white px-3 py-1 text-xs font-semibold shadow-lg">
+                {region.name}
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
 
       {/* IZ Markers - Show when level is region, iz, or cluster */}
       {(level === 'region' || level === 'iz' || level === 'cluster') && izs.map((iz) => (
@@ -294,7 +476,7 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
           }}
         >
           <Popup>
-            <div className="p-2 min-w-[200px]">
+            <div className="p-2 min-w-[220px]">
               <h3 className="font-bold text-sm mb-2">{iz.name}</h3>
               <p className="text-xs text-gray-600 mb-2">{iz.district}, {iz.province}</p>
               
@@ -319,10 +501,10 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
                 )}
               </div>
 
-              <div className="text-xs mb-2">
+              <div className="text-xs mb-2 space-y-1">
                 <div>Ngành: {iz.industries.slice(0, 2).join(', ')}</div>
-                <div>Công ty: {iz.totalCompanies}</div>
-                <div>Lao động: {(iz.totalEmployees / 1000).toFixed(1)}k</div>
+                <div>Doanh nghiệp: {iz.totalCompanies}</div>
+                <div>Lực lượng lao động: {(iz.totalEmployees / 1000).toFixed(1)}k</div>
               </div>
 
               <Link
@@ -336,13 +518,56 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
         </Marker>
       ))}
 
-      {/* Factory Markers - Show when level is cluster or factory, or when IZ is selected in iz level */}
+      {/* Cluster markers */}
+      {(level === 'cluster' || level === 'factory' || (selectedIZ && level === 'iz')) && clusters.map((cluster) => {
+        if (selectedIZ && cluster.izId !== selectedIZ) return null;
+        const position = clusterPositions.get(cluster.id);
+        if (!position) return null;
+
+        const iz = izs.find((item) => item.id === cluster.izId);
+        if (!iz) return null;
+
+        return (
+          <Marker
+            key={cluster.id}
+            position={position}
+            icon={createClusterIcon(cluster)}
+            eventHandlers={{
+              click: () => {
+                if (onClusterSelect) {
+                  onClusterSelect(cluster.id);
+                }
+                if (onLevelChange && level === 'iz') {
+                  onLevelChange('cluster');
+                }
+              },
+            }}
+          >
+            <Popup>
+              <div className="p-2 min-w-[220px]">
+                <h3 className="font-bold text-sm mb-2">{cluster.name}</h3>
+                <p className="text-xs text-gray-600 mb-2">{cluster.description}</p>
+                <div className="text-xs space-y-1 mb-2">
+                  <div>Thuộc KCN: <strong>{iz.name}</strong></div>
+                  <div>Ngành trọng tâm: {cluster.industries.join(', ')}</div>
+                  <div>Nhà máy đang hoạt động: {cluster.totalFactories}</div>
+                </div>
+                <div className="inline-flex items-center space-x-1 rounded-lg bg-indigo-50 text-indigo-600 px-2 py-1 text-xs">
+                  <Network className="w-3 h-3" />
+                  <span>Hub kết nối cụm</span>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+
+      {/* Factory Markers */}
       {((level === 'cluster' || level === 'factory') || (level === 'iz' && selectedIZ)) && factories.map((factory) => {
-        // Only show factories in selected IZ when in cluster/iz mode
         if ((level === 'cluster' || level === 'iz') && selectedIZ && factory.izId !== selectedIZ) {
           return null;
         }
-        
+
         return (
           <Marker
             key={factory.id}
@@ -360,7 +585,7 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
             }}
           >
             <Popup>
-              <div className="p-2 min-w-[200px]">
+              <div className="p-2 min-w-[220px]">
                 <h3 className="font-bold text-sm mb-2">{factory.name}</h3>
                 {factory.lotNumber && (
                   <p className="text-xs text-gray-600 mb-2">Lô: {factory.lotNumber}</p>
@@ -387,7 +612,7 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
                   )}
                 </div>
 
-                <div className="text-xs mb-2">
+                <div className="text-xs mb-2 space-y-1">
                   <div>Ngành: {factory.industries.slice(0, 2).join(', ')}</div>
                   {factory.products && factory.products.length > 0 && (
                     <div>Sản phẩm: {factory.products.length} loại</div>
@@ -405,33 +630,6 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
           </Marker>
         );
       })}
-
-      {/* Flow Lines (if enabled) - Simple lines from IZ to Factories */}
-      {showFlowLines && level === 'iz' && selectedIZ && (
-        <>
-          {factories
-            .filter(f => f.izId === selectedIZ)
-            .map((factory) => {
-              const iz = izs.find(i => i.id === factory.izId);
-              if (!iz) return null;
-              return (
-                <Polyline
-                  key={`flow-${factory.id}`}
-                  positions={[
-                    [iz.latitude, iz.longitude] as [number, number],
-                    [factory.latitude, factory.longitude] as [number, number],
-                  ]}
-                  pathOptions={{
-                    color: '#10B981',
-                    weight: 2,
-                    opacity: 0.6,
-                    dashArray: '10, 10',
-                  }}
-                />
-              );
-            })}
-        </>
-      )}
     </MapContainer>
   );
 }

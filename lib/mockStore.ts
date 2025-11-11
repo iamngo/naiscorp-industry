@@ -2,14 +2,16 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { mockFactories, mockServices, mockIndustrialZones } from '@/lib/mockData';
-import type { Factory, Service, ConnectionRequest, IndustrialZone } from '@/types/database';
+import { mockFactories, mockServices, mockIndustrialZones, mockSuppliers } from '@/lib/mockData';
+import type { Factory, Service, ConnectionRequest, IndustrialZone, Supplier, AdminLog } from '@/types/database';
 
 type MockStoreData = {
   factories: Factory[];
   services: Service[];
   connectionRequests: ConnectionRequest[];
   industrialZones: IndustrialZone[];
+  suppliers: Supplier[];
+  adminLogs: AdminLog[];
 };
 
 const DATA_DIRECTORY = path.join(process.cwd(), 'data');
@@ -39,6 +41,8 @@ async function ensureCache(): Promise<MockStoreData> {
       industrialZones: Array.isArray(parsed.industrialZones)
         ? parsed.industrialZones
         : clone(mockIndustrialZones),
+      suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : clone(mockSuppliers),
+      adminLogs: Array.isArray(parsed.adminLogs) ? parsed.adminLogs : [],
     };
   } catch {
     storeCache = {
@@ -46,6 +50,8 @@ async function ensureCache(): Promise<MockStoreData> {
       services: clone(mockServices),
       connectionRequests: [],
       industrialZones: clone(mockIndustrialZones),
+      suppliers: clone(mockSuppliers),
+      adminLogs: [],
     };
     await persistStore();
   }
@@ -265,6 +271,50 @@ export async function deleteIndustrialZone(id: string): Promise<boolean> {
   store.industrialZones.splice(index, 1);
   await persistStore();
   return true;
+}
+
+export async function getAdminLogs(): Promise<AdminLog[]> {
+  const store = await ensureCache();
+  return clone(store.adminLogs);
+}
+
+export async function addAdminLog(log: AdminLog): Promise<AdminLog> {
+  const store = await ensureCache();
+  store.adminLogs.push(clone(log));
+  await persistStore();
+  return clone(log);
+}
+
+export async function getAllSuppliers(): Promise<Supplier[]> {
+  const store = await ensureCache();
+  return clone(store.suppliers);
+}
+
+export async function getSupplier(id: string): Promise<Supplier | undefined> {
+  const store = await ensureCache();
+  const supplier = store.suppliers.find((item) => item.id === id);
+  return supplier ? clone(supplier) : undefined;
+}
+
+export async function updateSupplier(
+  id: string,
+  updates: Partial<Supplier>,
+): Promise<Supplier | undefined> {
+  const store = await ensureCache();
+  const index = store.suppliers.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: Supplier = {
+    ...store.suppliers[index],
+    ...clone(updates),
+    updatedAt: updates.updatedAt ?? new Date().toISOString(),
+  };
+
+  store.suppliers[index] = updated;
+  await persistStore();
+  return clone(updated);
 }
 
 

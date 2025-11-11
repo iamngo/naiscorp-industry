@@ -1,30 +1,180 @@
 'use client';
 
-import { useState } from 'react';
-import { mockProducts } from '@/lib/mockData';
-import { Search, Filter, Plus, Package, CheckCircle, MapPin, MessageSquare } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { mockProducts, mockSuppliers } from '@/lib/mockData';
+import type { Product } from '@/types/database';
+import {
+  Search,
+  Filter,
+  Plus,
+  Package,
+  CheckCircle,
+  MapPin,
+  MessageSquare,
+  Phone,
+  GitCompare,
+  Building2,
+  Award,
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [products] = useState(mockProducts);
+  const [products] = useState<Product[]>(mockProducts);
   const [showRFQModal, setShowRFQModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minMOQ, setMinMOQ] = useState('');
+  const [productVerification, setProductVerification] = useState<'all' | 'verified' | 'pending'>('all');
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest'>('relevance');
+  const [compareList, setCompareList] = useState<string[]>([]);
+
+  const supplierMap = useMemo(() => {
+    return new Map(mockSuppliers.map((supplier) => [supplier.id, supplier]));
+  }, []);
 
   // Get unique categories
-  const categories = Array.from(new Set(products.map(p => p.category)));
+  const categories = useMemo(() => Array.from(new Set(products.map((product) => product.category))).sort(), [products]);
 
-  // Filter products
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+  const certificationOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          products.flatMap((product) => product.certifications ?? [])
+        ),
+      ).sort(),
+    [products],
+  );
 
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = useMemo(() => {
+    const minPriceValue = minPrice ? parseFloat(minPrice) : null;
+    const maxPriceValue = maxPrice ? parseFloat(maxPrice) : null;
+    const minMOQValue = minMOQ ? parseInt(minMOQ, 10) : null;
+
+    return products.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+
+      const matchesVerification =
+        productVerification === 'all' || product.verificationStatus === productVerification;
+
+      const matchesPriceMin = minPriceValue === null || product.price >= minPriceValue;
+      const matchesPriceMax = maxPriceValue === null || product.price <= maxPriceValue;
+
+      const matchesMOQ = minMOQValue === null || product.minOrder <= minMOQValue;
+
+      const matchesCertifications =
+        selectedCertifications.length === 0 ||
+        selectedCertifications.every((cert) => product.certifications?.includes(cert));
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesVerification &&
+        matchesPriceMin &&
+        matchesPriceMax &&
+        matchesMOQ &&
+        matchesCertifications
+      );
+    });
+  }, [
+    maxPrice,
+    minMOQ,
+    minPrice,
+    productVerification,
+    products,
+    searchQuery,
+    selectedCategory,
+    selectedCertifications,
+  ]);
+
+  const sortedProducts = useMemo(() => {
+    const items = [...filteredProducts];
+
+    switch (sortOption) {
+      case 'price-asc':
+        items.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        items.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+        items.sort((a, b) => {
+          const aDate = new Date(a.updatedAt ?? a.createdAt ?? '').getTime();
+          const bDate = new Date(b.updatedAt ?? b.createdAt ?? '').getTime();
+          return bDate - aDate;
+        });
+        break;
+      case 'relevance':
+      default:
+        break;
+    }
+
+    return items;
+  }, [filteredProducts, sortOption]);
+
+  const comparedProducts = useMemo(
+    () =>
+      compareList
+        .map((id) => products.find((product) => product.id === id))
+        .filter((product): product is Product => Boolean(product)),
+    [compareList, products],
+  );
+
+  const toggleCertification = (cert: string) => {
+    setSelectedCertifications((prev) =>
+      prev.includes(cert) ? prev.filter((item) => item !== cert) : [...prev, cert],
+    );
+  };
+
+  const handleToggleCompare = (productId: string) => {
+    setCompareList((prev) => {
+      if (prev.includes(productId)) {
+        return prev.filter((id) => id !== productId);
+      }
+      if (prev.length >= 4) {
+        alert('Bạn chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc.');
+        return prev;
+      }
+      return [...prev, productId];
+    });
+  };
+
+  const handleClearCompare = () => setCompareList([]);
+
+  const handleContactSupplier = (supplierId?: string) => {
+    if (!supplierId) {
+      alert('Không tìm thấy thông tin liên hệ của nhà cung cấp.');
+      return;
+    }
+    const supplier = supplierMap.get(supplierId);
+    if (supplier?.contactEmail) {
+      window.location.href = `mailto:${supplier.contactEmail}`;
+      return;
+    }
+    alert('Nhà cung cấp chưa cập nhật email liên hệ.');
+  };
+
+  const handleQuickChat = (productName: string) => {
+    alert(`Mở hội thoại nhanh với nhà cung cấp về sản phẩm “${productName}” (Mock data).`);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setProductVerification('all');
+    setMinPrice('');
+    setMaxPrice('');
+    setMinMOQ('');
+    setSelectedCertifications([]);
+    setSortOption('relevance');
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -69,9 +219,9 @@ export default function MarketplacePage() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative md:col-span-1 xl:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
@@ -98,19 +248,165 @@ export default function MarketplacePage() {
                 ))}
               </select>
             </div>
+
+            {/* Verification Filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={productVerification}
+                onChange={(e) => setProductVerification(e.target.value as 'all' | 'verified' | 'pending')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="verified">Chỉ hiển thị sản phẩm đã xác thực</option>
+                <option value="pending">Sản phẩm đang chờ xác thực</option>
+              </select>
+            </div>
+
+            {/* Sort */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={sortOption}
+                onChange={(e) =>
+                  setSortOption(e.target.value as 'relevance' | 'price-asc' | 'price-desc' | 'newest')
+                }
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                <option value="relevance">Sắp xếp: Gợi ý</option>
+                <option value="price-asc">Giá tăng dần</option>
+                <option value="price-desc">Giá giảm dần</option>
+                <option value="newest">Mới cập nhật</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Giá tối thiểu (VND)</label>
+              <input
+                type="number"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="0"
+                min={0}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Giá tối đa (VND)</label>
+              <input
+                type="number"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Không giới hạn"
+                min={0}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">MOQ tối đa</label>
+              <input
+                type="number"
+                value={minMOQ}
+                onChange={(e) => setMinMOQ(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Đơn hàng tối thiểu"
+                min={0}
+              />
+            </div>
+          </div>
+
+          {certificationOptions.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-700">Chứng nhận yêu cầu</p>
+                {selectedCertifications.length > 0 && (
+                  <button
+                    onClick={() => setSelectedCertifications([])}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Bỏ chọn
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {certificationOptions.map((cert) => {
+                  const isActive = selectedCertifications.includes(cert);
+                  return (
+                    <button
+                      key={cert}
+                      type="button"
+                      onClick={() => toggleCertification(cert)}
+                      className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                        isActive
+                          ? 'border-amber-500 bg-amber-100 text-amber-700'
+                          : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-amber-400 hover:text-amber-600'
+                      }`}
+                    >
+                      {cert}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-xs text-gray-500">
+              Gợi ý: kết hợp bộ lọc để tìm nhà cung cấp phù hợp nhất với nhu cầu sản xuất hoặc sourcing của bạn.
+            </p>
+            <button
+              onClick={handleResetFilters}
+              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+            >
+              Đặt lại bộ lọc
+            </button>
           </div>
         </div>
 
         {/* Results */}
         <div className="mb-4 text-sm text-gray-600">
-          Tìm thấy {filteredProducts.length} sản phẩm
+          Tìm thấy {sortedProducts.length} sản phẩm phù hợp với bộ lọc hiện tại
         </div>
 
+        {comparedProducts.length > 0 && (
+          <div className="mb-6 rounded-lg border border-dashed border-blue-300 bg-blue-50/70 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-blue-700">
+                  Danh sách so sánh ({comparedProducts.length}/4)
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-blue-700">
+                  {comparedProducts.map((product) => (
+                    <span key={product.id} className="rounded-full bg-white/80 px-3 py-1 shadow-sm">
+                      {product.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={handleClearCompare}
+                className="text-xs font-medium text-blue-700 hover:text-blue-800"
+              >
+                Xóa tất cả
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {sortedProducts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200 overflow-hidden h-full flex flex-col">
+            {sortedProducts.map((product) => {
+              const supplier = product.supplierId ? supplierMap.get(product.supplierId) : undefined;
+              const isCompared = compareList.includes(product.id);
+
+              return (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200 overflow-hidden h-full flex flex-col"
+                >
                 {/* Image */}
                 <div className="relative h-48 bg-gray-200 overflow-hidden">
                   {product.images && product.images[0] ? (
@@ -135,11 +431,25 @@ export default function MarketplacePage() {
                 {/* Content */}
                 <div className="p-4 flex-1 flex flex-col">
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-                  
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span className="truncate">Khu CN: {product.izId || 'N/A'}</span>
-                  </div>
+
+                  {supplier && (
+                    <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <Building2 className="w-4 h-4 mr-1" />
+                      <Link
+                        href={`/supplier/${supplier.id}`}
+                        className="truncate text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        {supplier.companyName}
+                      </Link>
+                    </div>
+                  )}
+
+                  {product.izId && (
+                    <div className="flex items-center text-xs text-gray-500 mb-2">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="truncate">Khu công nghiệp: {product.izId}</span>
+                    </div>
+                  )}
 
                   <div className="mb-2">
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
@@ -147,9 +457,55 @@ export default function MarketplacePage() {
                     </span>
                   </div>
 
+                  {product.certifications && product.certifications.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {product.certifications.map((cert) => (
+                        <span
+                          key={cert}
+                          className="inline-flex items-center space-x-1 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700"
+                        >
+                          <Award className="w-3 h-3" />
+                          <span>{cert}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-1">
                     {product.description}
                   </p>
+
+                  {/* Quick actions */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => handleContactSupplier(product.supplierId)}
+                      className="inline-flex items-center space-x-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:border-emerald-400 hover:text-emerald-800"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>Liên hệ</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickChat(product.name)}
+                      className="inline-flex items-center space-x-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:border-blue-400 hover:text-blue-700"
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      <span>Chat nhanh</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleCompare(product.id)}
+                      className={`inline-flex items-center space-x-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                        isCompared
+                          ? 'border-purple-500 bg-purple-50 text-purple-700'
+                          : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-400 hover:text-purple-700'
+                      }`}
+                    >
+                      <GitCompare className="w-3 h-3" />
+                      <span>{isCompared ? 'Bỏ so sánh' : 'Thêm so sánh'}</span>
+                    </button>
+                  </div>
 
                   {/* Price and Order */}
                   <div className="mt-auto pt-4 border-t border-gray-200">
@@ -171,8 +527,9 @@ export default function MarketplacePage() {
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -198,6 +555,11 @@ export default function MarketplacePage() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <h2 className="text-2xl font-bold mb-4">Yêu cầu Báo giá (RFQ)</h2>
+              {selectedProduct && (
+                <div className="mb-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                  Sản phẩm: {products.find((product) => product.id === selectedProduct)?.name ?? '---'}
+                </div>
+              )}
               <form onSubmit={handleSubmitRFQ} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

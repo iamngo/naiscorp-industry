@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   addConnectionRequest,
   getAllConnectionRequests,
+  updateConnectionRequest,
 } from '@/lib/mockStore';
 import type { ConnectionRequest } from '@/types/database';
 
@@ -67,6 +68,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, status } = body ?? {};
+
+    if (!id || !status || !['pending', 'accepted', 'rejected'].includes(status)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid payload' },
+        { status: 400 },
+      );
+    }
+
+    const updated = await updateConnectionRequest(id, {
+      status,
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, error: 'Connection request not found' },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      message: 'Connection request updated',
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 },
     );
   }
 }

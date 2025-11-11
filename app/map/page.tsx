@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Search, Filter, MapPin, Factory as FactoryIcon, Plus, Layers, Network, Building2 } from 'lucide-react';
 import IZCard from '@/components/IZCard';
@@ -27,6 +27,7 @@ export default function MapPage() {
   const [selectedVerification, setSelectedVerification] = useState<string>('all');
   const [selectedESG, setSelectedESG] = useState<string>('all');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
   const [showFlowLines, setShowFlowLines] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +66,15 @@ export default function MapPage() {
 
   // Get unique provinces
   const provinces = Array.from(new Set(izs.map(iz => iz.province)));
+  const industries = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          izs.flatMap((iz) => iz.industries)
+        )
+      ).sort(),
+    [izs],
+  );
 
   // Filter IZs
   const filteredIZs = izs.filter(iz => {
@@ -84,8 +94,128 @@ export default function MapPage() {
 
     const matchesRegion = selectedRegion === 'all' || iz.regionId === selectedRegion;
 
-    return matchesSearch && matchesProvince && matchesVerification && matchesESG && matchesRegion;
+    const matchesIndustry =
+      selectedIndustry === 'all' || iz.industries.some((industry) => industry === selectedIndustry);
+
+    return matchesSearch && matchesProvince && matchesVerification && matchesESG && matchesRegion && matchesIndustry;
   });
+
+  const filteredIZIdSet = useMemo(() => new Set(filteredIZs.map((iz) => iz.id)), [filteredIZs]);
+
+  const filteredClusters = useMemo(
+    () => clusters.filter((cluster) => filteredIZIdSet.has(cluster.izId)),
+    [clusters, filteredIZIdSet],
+  );
+
+  const filteredFactories = useMemo(
+    () => factories.filter((factory) => filteredIZIdSet.has(factory.izId)),
+    [factories, filteredIZIdSet],
+  );
+
+  const verifiedIZCount = filteredIZs.filter((iz) => iz.verificationStatus === 'verified').length;
+  const esgFocusedIZCount = filteredIZs.filter((iz) => iz.esgStatus !== 'none').length;
+  const totalEmployees = filteredIZs.reduce((sum, iz) => sum + (iz.totalEmployees || 0), 0);
+  const verifiedFactoryCount = filteredFactories.filter((factory) => factory.verificationStatus === 'verified').length;
+
+  const insightCards = [
+    {
+      label: 'KCN hiển thị',
+      value: filteredIZs.length.toLocaleString('vi-VN'),
+      detail: `${verifiedIZCount} đã xác thực`,
+    },
+    {
+      label: 'Cụm công nghiệp',
+      value: filteredClusters.length.toLocaleString('vi-VN'),
+      detail: `${Math.max(esgFocusedIZCount, 0)} KCN có ESG/DX`,
+    },
+    {
+      label: 'Nhà máy trên bản đồ',
+      value: filteredFactories.length.toLocaleString('vi-VN'),
+      detail: `${verifiedFactoryCount} đã xác thực`,
+    },
+    {
+      label: 'Lao động ước tính',
+      value: totalEmployees ? `${(totalEmployees / 1000).toFixed(1)}k` : '0',
+      detail: 'Tổng lao động từ các KCN đang xem',
+    },
+  ];
+
+  const selectedIZData = selectedIZ ? izs.find((iz) => iz.id === selectedIZ) ?? null : null;
+  const selectedClusterData = selectedCluster ? clusters.find((cluster) => cluster.id === selectedCluster) ?? null : null;
+  const selectedFactoryData = selectedFactory ? factories.find((factory) => factory.id === selectedFactory) ?? null : null;
+  const selectedRegionData =
+    topologyLevel === 'region' && selectedRegion !== 'all'
+      ? regions.find((region) => region.id === selectedRegion) ?? null
+      : null;
+
+  const focusCard = (() => {
+    if (topologyLevel === 'factory' && selectedFactoryData) {
+      return {
+        title: `Nhà máy: ${selectedFactoryData.name}`,
+        items: [
+          `Ngành: ${selectedFactoryData.industries.join(', ')}`,
+          selectedFactoryData.productionCapacity
+            ? `Công suất: ${selectedFactoryData.productionCapacity}`
+            : undefined,
+          selectedFactoryData.clusterId
+            ? `Thuộc cụm: ${clusters.find((cluster) => cluster.id === selectedFactoryData.clusterId)?.name ?? 'N/A'}`
+            : undefined,
+          `Trạng thái: ${selectedFactoryData.verificationStatus === 'verified' ? 'Đã xác thực' : 'Đang chờ xác thực'}`,
+        ].filter(Boolean) as string[],
+      };
+    }
+
+    if (topologyLevel === 'cluster' && selectedClusterData) {
+      const clusterFactoryCount = filteredFactories.filter((factory) => factory.clusterId === selectedClusterData.id).length;
+      return {
+        title: `Cụm: ${selectedClusterData.name}`,
+        items: [
+          `Ngành chủ lực: ${selectedClusterData.industries.join(', ')}`,
+          `Nhà máy đang hoạt động: ${clusterFactoryCount}`,
+          `Quy mô (ước tính): ${selectedClusterData.area} ha`,
+        ],
+      };
+    }
+
+    if (topologyLevel === 'iz' && selectedIZData) {
+      const izClusterCount = filteredClusters.filter((cluster) => cluster.izId === selectedIZData.id).length;
+      const izFactoryCount = filteredFactories.filter((factory) => factory.izId === selectedIZData.id).length;
+      return {
+        title: `KCN: ${selectedIZData.name}`,
+        items: [
+          `Chủ đầu tư: ${selectedIZData.owner}`,
+          `Cụm công nghiệp: ${izClusterCount}`,
+          `Nhà máy: ${izFactoryCount}`,
+          `Lao động: ${selectedIZData.totalEmployees.toLocaleString('vi-VN')}`,
+        ],
+      };
+    }
+
+    if (topologyLevel === 'region') {
+      if (selectedRegionData) {
+        return {
+          title: `Vùng: ${selectedRegionData.name}`,
+          items: [
+            `KCN: ${selectedRegionData.totalIZs}`,
+            `Cụm: ${selectedRegionData.totalClusters}`,
+            `Nhà máy: ${selectedRegionData.totalFactories}`,
+            `ESG trung bình: ${selectedRegionData.averageESG}/100`,
+          ],
+        };
+      }
+
+      return {
+        title: 'Toàn quốc',
+        items: [
+          `KCN: ${izs.length}`,
+          `Cụm đang mô phỏng: ${clusters.length}`,
+          `Nhà máy được ghi nhận: ${factories.length}`,
+        ],
+      };
+    }
+
+    return null;
+  })();
 
   const handleIZSelect = (id: string) => {
     setSelectedIZ(id);
@@ -103,6 +233,26 @@ export default function MapPage() {
       setSelectedIZ(factory.izId);
     }
   };
+
+  useEffect(() => {
+    if (selectedIZ && !filteredIZs.some((iz) => iz.id === selectedIZ)) {
+      setSelectedIZ(null);
+      setSelectedCluster(null);
+      setSelectedFactory(null);
+    }
+  }, [filteredIZs, selectedIZ]);
+
+  useEffect(() => {
+    if (selectedCluster && !filteredClusters.some((cluster) => cluster.id === selectedCluster)) {
+      setSelectedCluster(null);
+    }
+  }, [filteredClusters, selectedCluster]);
+
+  useEffect(() => {
+    if (selectedFactory && !filteredFactories.some((factory) => factory.id === selectedFactory)) {
+      setSelectedFactory(null);
+    }
+  }, [filteredFactories, selectedFactory]);
 
   const handleClusterSelect = (id: string) => {
     setSelectedCluster(id);
@@ -243,7 +393,7 @@ export default function MapPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="grid md:grid-cols-5 gap-4">
+          <div className="grid md:grid-cols-6 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -304,6 +454,23 @@ export default function MapPage() {
               </select>
             </div>
 
+            {/* Industry Filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={selectedIndustry}
+                onChange={(e) => setSelectedIndustry(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                <option value="all">Tất cả ngành</option>
+                {industries.map((industry) => (
+                  <option key={industry} value={industry}>
+                    {industry}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Region Filter */}
             {topologyLevel === 'region' && (
               <div className="relative">
@@ -341,14 +508,43 @@ export default function MapPage() {
           </div>
         </div>
 
+        {/* Insight cards */}
+        <div className="grid gap-4 mb-6 md:grid-cols-2 xl:grid-cols-4">
+          {insightCards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white p-4 shadow-sm"
+            >
+              <p className="text-sm font-medium text-blue-600 uppercase tracking-wide">{card.label}</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{card.value}</p>
+              <p className="mt-2 text-sm text-slate-500">{card.detail}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Focus summary */}
+        {focusCard && (
+          <div className="mb-6 rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900">{focusCard.title}</h3>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {focusCard.items.map((item, index) => (
+                <div key={`${focusCard.title}-${index}`} className="flex items-center space-x-2 text-sm text-slate-600">
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Map and List */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Map */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ height: '600px' }}>
             <TopologyMapComponent
               izs={filteredIZs}
-              factories={factories}
-              clusters={clusters}
+              factories={filteredFactories}
+              clusters={filteredClusters}
               regions={regions}
               selectedIZ={selectedIZ}
               selectedFactory={selectedFactory}
@@ -367,7 +563,9 @@ export default function MapPage() {
             <div className="text-sm text-gray-600 mb-2 flex items-center justify-between">
               <span>
                 Tìm thấy {filteredIZs.length} khu công nghiệp
-                {topologyLevel === 'cluster' || topologyLevel === 'factory' ? `, ${factories.filter(f => !selectedIZ || f.izId === selectedIZ).length} nhà máy` : ''}
+                {topologyLevel === 'cluster' || topologyLevel === 'factory'
+                  ? `, ${filteredFactories.filter((factory) => !selectedIZ || factory.izId === selectedIZ).length} nhà máy`
+                  : ''}
                 {topologyLevel === 'region' && ` (${regions.length} vùng miền)`}
               </span>
               <div className="flex items-center space-x-2 text-xs">

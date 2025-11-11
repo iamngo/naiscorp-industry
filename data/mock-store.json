@@ -356,7 +356,7 @@
         "Chế biến thực phẩm"
       ],
       "description": "KCN Hòa Khánh nằm gần cảng Liên Chiểu, thuận tiện giao thương quốc tế và khu vực miền Trung.",
-      "verificationStatus": "pending",
+      "verificationStatus": "verified",
       "esgStatus": "social",
       "digitalTransformation": false,
       "contactEmail": "support@hoakhanh-iz.vn",
@@ -373,7 +373,105 @@
         "cluster-4"
       ],
       "createdAt": "2024-01-09T00:00:00Z",
-      "updatedAt": "2024-02-20T00:00:00Z"
+      "updatedAt": "2025-11-11T01:35:30.682Z",
+      "verifiedAt": "2025-11-11T01:35:30.641Z"
     }
-  ]
+  ],
+  "suppliers": [
+    {
+      "id": "supp-1",
+      "userId": "user-31",
+      "companyName": "Công ty Dệt May Hòa Bình",
+      "businessLicense": "0301234567",
+      "industries": [
+        "Dệt may"
+      ],
+      "services": [
+        "training",
+        "consumables"
+      ],
+      "products": [
+        "Vải Cotton 100%",
+        "Vải Denim cao cấp"
+      ],
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-02-15T00:00:00Z",
+      "verifiedBy": "user-1",
+      "isStrategicPartner": true,
+      "description": "Nhà cung ứng vải xuất khẩu với hệ thống nhuộm – hoàn tất đạt chuẩn OEKO-TEX, chuyên phối hợp cùng các nhà máy may FOB tại Bình Dương.",
+      "contactEmail": "sales@hoabinh-textile.vn",
+      "contactPhone": "028-555-8888",
+      "website": "https://hoabinh-textile.vn",
+      "createdAt": "2024-01-12T00:00:00Z",
+      "updatedAt": "2024-03-04T00:00:00Z",
+      "rating": 4.7,
+      "reviewCount": 124,
+      "regions": [
+        "Miền Nam"
+      ]
+    },
+    {
+      "id": "supp-2",
+      "userId": "user-32",
+      "companyName": "LogiHub Việt Nam",
+      "industries": [
+        "Logistics",
+        "Kho bãi"
+      ],
+      "services": [
+        "logistics",
+        "event"
+      ],
+      "products": [
+        "Dịch vụ kho bãi 3PL",
+        "Giải pháp fulfillment xuyên biên giới"
+      ],
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-03-02T00:00:00Z",
+      "verifiedBy": "user-1",
+      "isStrategicPartner": false,
+      "description": "Đơn vị logistics 3PL với mạng lưới kho tại VSIP, ICD Sóng Thần và hệ thống quản lý WMS tích hợp API với các sàn TMĐT.",
+      "contactEmail": "hello@logihub.vn",
+      "contactPhone": "028-6666-9090",
+      "website": "https://logihub.vn",
+      "createdAt": "2024-01-20T00:00:00Z",
+      "updatedAt": "2024-03-01T00:00:00Z",
+      "rating": 4.5,
+      "reviewCount": 87,
+      "regions": [
+        "Miền Nam",
+        "Miền Bắc"
+      ]
+    },
+    {
+      "id": "supp-3",
+      "userId": "user-33",
+      "companyName": "GreenTech Energy",
+      "industries": [
+        "Năng lượng",
+        "Tư vấn"
+      ],
+      "services": [
+        "energy",
+        "training"
+      ],
+      "products": [
+        "Tư vấn chuyển đổi năng lượng xanh"
+      ],
+      "verificationStatus": "pending",
+      "isStrategicPartner": false,
+      "description": "Đội ngũ kỹ sư triển khai giải pháp năng lượng tái tạo, lưu trữ và tối ưu chi phí điện cho các nhà máy công nghiệp.",
+      "contactEmail": "contact@greentech.vn",
+      "contactPhone": "024-7788-8899",
+      "website": "https://greentech.vn",
+      "createdAt": "2024-02-05T00:00:00Z",
+      "updatedAt": "2024-02-26T00:00:00Z",
+      "rating": 4.3,
+      "reviewCount": 42,
+      "regions": [
+        "Miền Trung"
+      ]
+    }
+  ],
+  "adminLogs": []
 }

@@ -3,6 +3,7 @@ import {
   getIndustrialZone,
   updateIndustrialZone,
   deleteIndustrialZone,
+  addAdminLog,
 } from '@/lib/mockStore';
 
 type IndustrialZoneRouteContext = {
@@ -55,6 +56,30 @@ export async function PUT(
     const updated = await updateIndustrialZone(id, {
       ...body,
       updatedAt: new Date().toISOString(),
+    });
+
+    if (!updated) {
+      console.error('[API] update industrial zone returned undefined', { id });
+      return NextResponse.json(
+        { error: 'Unable to update industrial zone' },
+        { status: 500 },
+      );
+    }
+
+    await addAdminLog({
+      id: `log-${Date.now()}`,
+      adminId: 'user-1',
+      action: 'update_industrial_zone',
+      entityType: 'industrial_zone',
+      entityId: id,
+      details: {
+        updatedFields: Object.keys(body),
+        previousVerification: iz.verificationStatus,
+        newVerification: updated.verificationStatus,
+        esgStatus: updated.esgStatus,
+        digitalTransformation: updated.digitalTransformation,
+      },
+      createdAt: new Date().toISOString(),
     });
 
     return NextResponse.json({ data: updated });
