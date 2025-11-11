@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -16,6 +16,11 @@ import {
   Layers,
   MessageSquare,
   Star,
+  Timer,
+  TrendingUp,
+  Gauge,
+  BarChart3,
+  Play,
 } from 'lucide-react';
 import type { Supplier, Product, Service } from '@/types/database';
 import {
@@ -70,6 +75,85 @@ export default function SupplierProfilePage() {
     }).format(price);
     return `${formatted}/${unit}`;
   };
+
+  const formatRevenue = useCallback((revenue?: number) => {
+    if (!revenue) return 'Đang cập nhật';
+    if (revenue >= 1_000_000_000) {
+      return `${(revenue / 1_000_000_000).toFixed(1)}B USD`;
+    }
+    if (revenue >= 1_000_000) {
+      return `${(revenue / 1_000_000).toFixed(1)}M USD`;
+    }
+    return `${revenue.toLocaleString('en-US')} USD`;
+  }, []);
+
+  const formatArea = useCallback((area?: number) => {
+    if (!area) return 'Đang cập nhật';
+    if (area >= 1_000_000) {
+      return `${(area / 1_000_000).toFixed(1)} km²`;
+    }
+    return `${area.toLocaleString('vi-VN')} m²`;
+  }, []);
+
+  const formatResponseTime = useCallback((hours?: number) => {
+    if (!hours) return 'Đang cập nhật';
+    if (hours < 1) {
+      return `${Math.round(hours * 60)} phút`;
+    }
+    return `${hours.toFixed(1)} giờ`;
+  }, []);
+
+  const getEmbeddedVideoUrl = useCallback((url?: string | null) => {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname.includes('youtube.com') || parsed.hostname.includes('youtu.be')) {
+        const videoId =
+          parsed.hostname === 'youtu.be' ? parsed.pathname.slice(1) : parsed.searchParams.get('v');
+        if (videoId) {
+          return `https://www.youtube.com/embed/${videoId}`;
+        }
+      }
+    } catch {
+      return url;
+    }
+    return url;
+  }, []);
+
+  const performanceHighlights = useMemo(() => {
+    if (!supplier) return [];
+    return [
+      {
+        label: 'Thời gian phản hồi',
+        value: formatResponseTime(supplier.responseTimeHours),
+        description: 'Trung bình phản hồi khách hàng',
+        icon: Timer,
+      },
+      {
+        label: 'Tỉ lệ giao đúng hạn',
+        value: supplier.onTimeDeliveryRate ? `${supplier.onTimeDeliveryRate}%` : '—',
+        description: '12 tháng gần nhất',
+        icon: Gauge,
+      },
+      {
+        label: 'Doanh thu xuất khẩu',
+        value: formatRevenue(supplier.annualExportRevenueUSD),
+        description: 'Ước tính năm gần nhất',
+        icon: TrendingUp,
+      },
+      {
+        label: 'Sản phẩm đã xác thực',
+        value: `${verifiedProducts}/${products.length}`,
+        description: 'Đang hiển thị trên Marketplace',
+        icon: BarChart3,
+      },
+    ];
+  }, [formatResponseTime, formatRevenue, products.length, supplier, verifiedProducts]);
+
+  const embeddedVideo = useMemo(
+    () => getEmbeddedVideoUrl(supplier?.videoUrl),
+    [getEmbeddedVideoUrl, supplier?.videoUrl],
+  );
 
   if (loading) {
     return (
@@ -168,6 +252,29 @@ export default function SupplierProfilePage() {
               </button>
             </div>
           </div>
+
+        {performanceHighlights.length > 0 && (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {performanceHighlights.map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <div
+                  key={metric.label}
+                  className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/70 p-4 shadow-sm"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-500">{metric.label}</p>
+                    <p className="text-lg font-semibold text-gray-900">{metric.value}</p>
+                    <p className="text-xs text-gray-500">{metric.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -238,6 +345,34 @@ export default function SupplierProfilePage() {
                 </div>
               )}
             </div>
+
+            {embeddedVideo && (
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                    <Play className="w-5 h-5 text-blue-600" />
+                    <span>Video giới thiệu</span>
+                  </h2>
+                  <a
+                    href={supplier.videoUrl ?? embeddedVideo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Xem trên nền tảng gốc →
+                  </a>
+                </div>
+                <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-900">
+                  <iframe
+                    src={embeddedVideo}
+                    title={`Giới thiệu ${supplier.companyName}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="h-full w-full"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Product portfolio */}
             <div className="bg-white rounded-xl shadow-md p-6">
@@ -349,6 +484,40 @@ export default function SupplierProfilePage() {
                 <li className="flex items-center justify-between">
                   <span>Dịch vụ cung cấp</span>
                   <span className="font-semibold text-gray-900">{services.length}</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Tỉ lệ giao đúng hạn</span>
+                  <span className="font-semibold text-gray-900">
+                    {supplier.onTimeDeliveryRate ? `${supplier.onTimeDeliveryRate}%` : 'Đang cập nhật'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Thời gian phản hồi</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatResponseTime(supplier.responseTimeHours)}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Doanh thu xuất khẩu</span>
+                  <span className="font-semibold text-gray-900">{formatRevenue(supplier.annualExportRevenueUSD)}</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Diện tích nhà xưởng</span>
+                  <span className="font-semibold text-gray-900">{formatArea(supplier.factoryArea)}</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Năm thành lập</span>
+                  <span className="font-semibold text-gray-900">
+                    {supplier.establishedYear ?? 'Đang cập nhật'}
+                  </span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span>Ngôn ngữ hỗ trợ</span>
+                  <span className="font-semibold text-gray-900">
+                    {supplier.languages && supplier.languages.length
+                      ? supplier.languages.map((lang) => lang.toUpperCase()).join(', ')
+                      : 'VI'}
+                  </span>
                 </li>
               </ul>
             </div>

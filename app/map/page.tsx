@@ -112,6 +112,42 @@ export default function MapPage() {
     [factories, filteredIZIdSet],
   );
 
+  const filteredRegionsList = useMemo(() => {
+    if (topologyLevel !== 'region') {
+      return regions;
+    }
+    if (selectedRegion !== 'all') {
+      return regions.filter((region) => region.id === selectedRegion);
+    }
+    return regions;
+  }, [regions, selectedRegion, topologyLevel]);
+
+  const regionAggregate = useMemo(() => {
+    if (!filteredRegionsList.length) {
+      return {
+        totalInvestment: 0,
+        averageESG: 0,
+        totalFactories: 0,
+        totalClusters: 0,
+        totalIZs: 0,
+      };
+    }
+    const totalInvestment = filteredRegionsList.reduce((sum, region) => sum + (region.totalInvestment || 0), 0);
+    const totalFactories = filteredRegionsList.reduce((sum, region) => sum + (region.totalFactories || 0), 0);
+    const totalClusters = filteredRegionsList.reduce((sum, region) => sum + (region.totalClusters || 0), 0);
+    const totalIZs = filteredRegionsList.reduce((sum, region) => sum + (region.totalIZs || 0), 0);
+    const averageESG =
+      filteredRegionsList.reduce((sum, region) => sum + (region.averageESG || 0), 0) /
+      filteredRegionsList.length;
+    return {
+      totalInvestment,
+      averageESG,
+      totalFactories,
+      totalClusters,
+      totalIZs,
+    };
+  }, [filteredRegionsList]);
+
   const verifiedIZCount = filteredIZs.filter((iz) => iz.verificationStatus === 'verified').length;
   const esgFocusedIZCount = filteredIZs.filter((iz) => iz.esgStatus !== 'none').length;
   const totalEmployees = filteredIZs.reduce((sum, iz) => sum + (iz.totalEmployees || 0), 0);
@@ -138,6 +174,23 @@ export default function MapPage() {
       value: totalEmployees ? `${(totalEmployees / 1000).toFixed(1)}k` : '0',
       detail: 'Tổng lao động từ các KCN đang xem',
     },
+    ...(topologyLevel === 'region'
+      ? [
+          {
+            label: 'ESG trung bình',
+            value: `${regionAggregate.averageESG.toFixed(1)}/100`,
+            detail: `${filteredRegionsList.length} vùng`,
+          },
+          {
+            label: 'Tổng vốn đầu tư',
+            value:
+              regionAggregate.totalInvestment >= 1e12
+                ? `${(regionAggregate.totalInvestment / 1e12).toFixed(1)} nghìn tỷ VND`
+                : `${(regionAggregate.totalInvestment / 1e9).toFixed(1)} tỷ VND`,
+            detail: 'Cộng dồn theo vùng đang hiển thị',
+          },
+        ]
+      : []),
   ];
 
   const selectedIZData = selectedIZ ? izs.find((iz) => iz.id === selectedIZ) ?? null : null;
@@ -180,6 +233,27 @@ export default function MapPage() {
     if (topologyLevel === 'iz' && selectedIZData) {
       const izClusterCount = filteredClusters.filter((cluster) => cluster.izId === selectedIZData.id).length;
       const izFactoryCount = filteredFactories.filter((factory) => factory.izId === selectedIZData.id).length;
+      const avgFactoryESG =
+        izFactoryCount > 0
+          ? (
+              filteredFactories
+                .filter((factory) => factory.izId === selectedIZData.id)
+                .reduce((sum, factory) => {
+                  switch (factory.esgStatus) {
+                    case 'all':
+                      return sum + 100;
+                    case 'environmental':
+                      return sum + 75;
+                    case 'social':
+                      return sum + 65;
+                    case 'governance':
+                      return sum + 70;
+                    default:
+                      return sum + 40;
+                  }
+                }, 0) / izFactoryCount
+            ).toFixed(0)
+          : '0';
       return {
         title: `KCN: ${selectedIZData.name}`,
         items: [
@@ -187,6 +261,7 @@ export default function MapPage() {
           `Cụm công nghiệp: ${izClusterCount}`,
           `Nhà máy: ${izFactoryCount}`,
           `Lao động: ${selectedIZData.totalEmployees.toLocaleString('vi-VN')}`,
+          `Điểm ESG trung bình: ${avgFactoryESG}`,
         ],
       };
     }
@@ -200,6 +275,7 @@ export default function MapPage() {
             `Cụm: ${selectedRegionData.totalClusters}`,
             `Nhà máy: ${selectedRegionData.totalFactories}`,
             `ESG trung bình: ${selectedRegionData.averageESG}/100`,
+            `Tổng vốn đầu tư: ${(selectedRegionData.totalInvestment / 1e12).toFixed(1)} nghìn tỷ VND`,
           ],
         };
       }

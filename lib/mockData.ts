@@ -397,6 +397,13 @@ export const mockSuppliers: Supplier[] = [
     rating: 4.7,
     reviewCount: 124,
     regions: ['Miền Nam'],
+    responseTimeHours: 1.8,
+    onTimeDeliveryRate: 98,
+    establishedYear: 2008,
+    factoryArea: 32000,
+    annualExportRevenueUSD: 18000000,
+    languages: ['vi', 'en', 'ja'],
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     description:
       'Nhà cung ứng vải xuất khẩu với hệ thống nhuộm – hoàn tất đạt chuẩn OEKO-TEX, chuyên phối hợp cùng các nhà máy may FOB tại Bình Dương.',
     contactEmail: 'sales@hoabinh-textile.vn',
@@ -419,6 +426,13 @@ export const mockSuppliers: Supplier[] = [
     rating: 4.5,
     reviewCount: 87,
     regions: ['Miền Nam', 'Miền Bắc'],
+    responseTimeHours: 2.5,
+    onTimeDeliveryRate: 95,
+    establishedYear: 2015,
+    factoryArea: 45000,
+    annualExportRevenueUSD: 12500000,
+    languages: ['vi', 'en'],
+    videoUrl: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I',
     description:
       'Đơn vị logistics 3PL với mạng lưới kho tại VSIP, ICD Sóng Thần và hệ thống quản lý WMS tích hợp API với các sàn TMĐT.',
     contactEmail: 'hello@logihub.vn',
@@ -440,6 +454,13 @@ export const mockSuppliers: Supplier[] = [
     rating: 4.3,
     reviewCount: 42,
     regions: ['Miền Trung'],
+    responseTimeHours: 3.2,
+    onTimeDeliveryRate: 92,
+    establishedYear: 2017,
+    factoryArea: 12000,
+    annualExportRevenueUSD: 6500000,
+    languages: ['vi', 'en'],
+    videoUrl: 'https://www.youtube.com/watch?v=QH2-TGUlwu4',
     description:
       'Đội ngũ kỹ sư triển khai giải pháp năng lượng tái tạo, lưu trữ và tối ưu chi phí điện cho các nhà máy công nghiệp.',
     contactEmail: 'contact@greentech.vn',
@@ -468,6 +489,7 @@ export const mockProducts: Product[] = [
     verifiedBy: 'user-1',
     createdAt: '2024-02-01T00:00:00Z',
     updatedAt: '2024-02-18T00:00:00Z',
+    rating: 4.6,
   },
   {
     id: 'prod-2',
@@ -485,6 +507,7 @@ export const mockProducts: Product[] = [
     verifiedBy: 'user-1',
     createdAt: '2024-02-20T00:00:00Z',
     updatedAt: '2024-03-01T00:00:00Z',
+    rating: 4.9,
   },
   {
     id: 'prod-3',
@@ -499,6 +522,7 @@ export const mockProducts: Product[] = [
     verificationStatus: 'pending',
     createdAt: '2024-02-25T00:00:00Z',
     updatedAt: '2024-02-25T00:00:00Z',
+    rating: 4.2,
   },
 ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { mockProducts, mockSuppliers } from '@/lib/mockData';
 import type { Product } from '@/types/database';
 import {
@@ -15,11 +15,14 @@ import {
   GitCompare,
   Building2,
   Award,
+  Star,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [products] = useState<Product[]>(mockProducts);
   const [showRFQModal, setShowRFQModal] = useState(false);
@@ -30,8 +33,9 @@ export default function MarketplacePage() {
   const [minMOQ, setMinMOQ] = useState('');
   const [productVerification, setProductVerification] = useState<'all' | 'verified' | 'pending'>('all');
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest'>('relevance');
+  const [sortOption, setSortOption] = useState<'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'rating-desc'>('relevance');
   const [compareList, setCompareList] = useState<string[]>([]);
+  const [ratingFilters, setRatingFilters] = useState<number[]>([]);
 
   const supplierMap = useMemo(() => {
     return new Map(mockSuppliers.map((supplier) => [supplier.id, supplier]));
@@ -50,10 +54,32 @@ export default function MarketplacePage() {
     [products],
   );
 
+  const topKeywords = useMemo(() => {
+    const keywords = new Set<string>();
+    products.forEach((product) => {
+      product.name
+        .split(/\s+/)
+        .filter((word) => word.length > 2)
+        .forEach((word) => keywords.add(word));
+      product.category && keywords.add(product.category);
+    });
+    return Array.from(keywords).slice(0, 8);
+  }, [products]);
+
+  const ratingOptions = [4.0, 4.5, 5.0] as const;
+
+  const selectedRatings = useMemo(() => new Set<number>(ratingFilters), [ratingFilters]);
+
+useEffect(() => {
+  setSuggestions(topKeywords);
+}, [topKeywords]);
+
   const filteredProducts = useMemo(() => {
     const minPriceValue = minPrice ? parseFloat(minPrice) : null;
     const maxPriceValue = maxPrice ? parseFloat(maxPrice) : null;
     const minMOQValue = minMOQ ? parseInt(minMOQ, 10) : null;
+
+    const ratingThreshold = selectedRatings.size ? Math.max(...Array.from(selectedRatings)) : 0;
 
     return products.filter((product) => {
       const matchesSearch =
@@ -74,6 +100,13 @@ export default function MarketplacePage() {
         selectedCertifications.length === 0 ||
         selectedCertifications.every((cert) => product.certifications?.includes(cert));
 
+      const supplierRating = product.supplierId
+        ? supplierMap.get(product.supplierId)?.rating ?? 0
+        : 0;
+
+      const matchesRating =
+        ratingThreshold === 0 || supplierRating >= ratingThreshold;
+
       return (
         matchesSearch &&
         matchesCategory &&
@@ -81,7 +114,8 @@ export default function MarketplacePage() {
         matchesPriceMin &&
         matchesPriceMax &&
         matchesMOQ &&
-        matchesCertifications
+        matchesCertifications &&
+        matchesRating
       );
     });
   }, [
@@ -93,6 +127,8 @@ export default function MarketplacePage() {
     searchQuery,
     selectedCategory,
     selectedCertifications,
+    selectedRatings,
+    supplierMap,
   ]);
 
   const sortedProducts = useMemo(() => {
@@ -112,13 +148,20 @@ export default function MarketplacePage() {
           return bDate - aDate;
         });
         break;
+      case 'rating-desc':
+        items.sort((a, b) => {
+          const ratingA = a.supplierId ? supplierMap.get(a.supplierId)?.rating ?? 0 : 0;
+          const ratingB = b.supplierId ? supplierMap.get(b.supplierId)?.rating ?? 0 : 0;
+          return ratingB - ratingA;
+        });
+        break;
       case 'relevance':
       default:
         break;
     }
 
     return items;
-  }, [filteredProducts, sortOption]);
+  }, [filteredProducts, sortOption, supplierMap]);
 
   const comparedProducts = useMemo(
     () =>
@@ -128,9 +171,29 @@ export default function MarketplacePage() {
     [compareList, products],
   );
 
+  const handledSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (!value) {
+      setSuggestions(topKeywords);
+      return;
+    }
+    const lower = value.toLowerCase();
+    const matches = products
+      .map((product) => product.name)
+      .filter((name) => name.toLowerCase().includes(lower))
+      .slice(0, 8);
+    setSuggestions(matches.length ? matches : topKeywords);
+  };
+
   const toggleCertification = (cert: string) => {
     setSelectedCertifications((prev) =>
       prev.includes(cert) ? prev.filter((item) => item !== cert) : [...prev, cert],
+    );
+  };
+
+  const toggleRating = (rating: number) => {
+    setRatingFilters((prev) =>
+      prev.includes(rating) ? prev.filter((item) => item !== rating) : [...prev, rating],
     );
   };
 
@@ -174,6 +237,8 @@ export default function MarketplacePage() {
     setMinMOQ('');
     setSelectedCertifications([]);
     setSortOption('relevance');
+    setRatingFilters([]);
+    setSuggestions(topKeywords);
   };
 
   const formatPrice = (price: number) => {
@@ -194,6 +259,37 @@ export default function MarketplacePage() {
     setShowRFQModal(false);
     setSelectedProduct(null);
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const payload = {
+      q: searchQuery,
+      category: selectedCategory,
+      verification: productVerification,
+      minPrice,
+      maxPrice,
+      minMOQ,
+      certifications: selectedCertifications,
+      ratings: ratingFilters,
+      timestamp: new Date().toISOString(),
+    };
+    fetch('/api/analytics/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [
+    searchQuery,
+    selectedCategory,
+    productVerification,
+    minPrice,
+    maxPrice,
+    minMOQ,
+    selectedCertifications,
+    ratingFilters,
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -227,9 +323,37 @@ export default function MarketplacePage() {
                 type="text"
                 placeholder="Tìm kiếm sản phẩm..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handledSearchChange(e.target.value)}
+                onFocus={() => {
+                  setShowSuggestions(true);
+                  setSuggestions(topKeywords);
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowSuggestions(false), 120);
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 z-40 mt-2 rounded-lg border border-gray-200 bg-white shadow-lg">
+                  <ul className="max-h-48 overflow-auto text-sm">
+                    {suggestions.map((item) => (
+                      <li key={item}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setSearchQuery(item);
+                            setShowSuggestions(false);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-blue-50"
+                        >
+                          {item}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Category Filter */}
@@ -269,7 +393,9 @@ export default function MarketplacePage() {
               <select
                 value={sortOption}
                 onChange={(e) =>
-                  setSortOption(e.target.value as 'relevance' | 'price-asc' | 'price-desc' | 'newest')
+                  setSortOption(
+                    e.target.value as 'relevance' | 'price-asc' | 'price-desc' | 'newest' | 'rating-desc',
+                  )
                 }
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
@@ -277,6 +403,7 @@ export default function MarketplacePage() {
                 <option value="price-asc">Giá tăng dần</option>
                 <option value="price-desc">Giá giảm dần</option>
                 <option value="newest">Mới cập nhật</option>
+                <option value="rating-desc">Đánh giá cao nhất</option>
               </select>
             </div>
           </div>
@@ -351,6 +478,37 @@ export default function MarketplacePage() {
               </div>
             </div>
           )}
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700">Đánh giá tối thiểu</p>
+              {selectedRatings.size > 0 && (
+                <button onClick={() => setRatingFilters([])} className="text-xs text-blue-600 hover:underline">
+                  Bỏ chọn
+                </button>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ratingOptions.map((rating) => {
+                const active = selectedRatings.has(rating);
+                return (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => toggleRating(rating)}
+                    className={`inline-flex items-center space-x-1 rounded-full border px-3 py-1 text-xs transition-colors ${
+                      active
+                        ? 'border-yellow-500 bg-yellow-100 text-yellow-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-yellow-400 hover:text-yellow-600'
+                    }`}
+                  >
+                    <Star className="w-3 h-3 fill-current" />
+                    <span>{rating.toFixed(1)}+</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="mt-4 flex items-center justify-between">
             <p className="text-xs text-gray-500">
@@ -433,14 +591,25 @@ export default function MarketplacePage() {
                   <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
 
                   {supplier && (
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Building2 className="w-4 h-4 mr-1" />
-                      <Link
-                        href={`/supplier/${supplier.id}`}
-                        className="truncate text-blue-600 hover:text-blue-700 hover:underline"
-                      >
-                        {supplier.companyName}
-                      </Link>
+                    <div className="flex items-center text-sm text-gray-600 mb-2 space-x-2">
+                      <div className="flex items-center">
+                        <Building2 className="w-4 h-4 mr-1" />
+                        <Link
+                          href={`/supplier/${supplier.id}`}
+                          className="truncate text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          {supplier.companyName}
+                        </Link>
+                      </div>
+                      {supplier.rating && (
+                        <span className="inline-flex items-center space-x-1 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-600">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          <span>
+                            {supplier.rating.toFixed(1)}
+                            {supplier.reviewCount ? ` (${supplier.reviewCount})` : ''}
+                          </span>
+                        </span>
+                      )}
                     </div>
                   )}
 

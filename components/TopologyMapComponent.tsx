@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon, Polyline, CircleMarker, Tooltip, Pane } from 'react-leaflet';
+import { MapContainer, Marker, Popup, useMap, Polygon, Polyline, CircleMarker, Tooltip, Pane, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import { IndustrialZone, Factory, Cluster, Region, TopologyLevel } from '@/types/database';
 import { CheckCircle, Leaf, Cpu, Network } from 'lucide-react';
@@ -403,14 +403,33 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
       key={`map-${level}-${selectedIZ}`}
       className="topology-map-container"
     >
-      <Pane name="topology-background" style={{ zIndex: 50 }}>
-        <div className="topology-grid-overlay" />
+      <Pane name="topology-background" style={{ zIndex: 40 }}>
+        <div className="topology-grid-overlay subtle" />
       </Pane>
       <TileLayer
+        className="topology-tile-layer"
         attribution=""
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        opacity={0.55}
+        url="https://tile-c.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+        opacity={0.92}
       />
+      <Pane name="topology-abstract" style={{ zIndex: 45 }}>
+        <div className="topology-gradient-overlay subtle" />
+        <svg className="topology-circuit-lines subtle" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="circuit-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(59,130,246,0.35)" />
+              <stop offset="100%" stopColor="rgba(14,165,233,0.05)" />
+            </linearGradient>
+          </defs>
+          <path d="M50 120 L280 220 L320 210 L520 320 L650 300 L820 380" stroke="url(#circuit-gradient)" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M120 480 L260 420 L420 540 L580 500 L760 620 L900 560" stroke="url(#circuit-gradient)" strokeWidth="5" fill="none" opacity="0.7" strokeDasharray="12 18" />
+          <path d="M80 780 L260 720 L360 760 L520 700 L700 780 L920 720" stroke="url(#circuit-gradient)" strokeWidth="4" fill="none" opacity="0.55" />
+          <circle cx="280" cy="220" r="12" fill="rgba(59,130,246,0.4)" />
+          <circle cx="520" cy="320" r="10" fill="rgba(96,165,250,0.35)" />
+          <circle cx="700" cy="780" r="11" fill="rgba(147,197,253,0.3)" />
+          <circle cx="420" cy="540" r="9" fill="rgba(14,165,233,0.35)" />
+        </svg>
+      </Pane>
       
       <MapController 
         selectedIZ={selectedIZ} 
@@ -475,6 +494,9 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
             },
           }}
         >
+          <Tooltip direction="top" offset={[0, -10]} className="!bg-blue-600 !text-white">
+            <div className="text-xs font-semibold">{iz.name}</div>
+          </Tooltip>
           <Popup>
             <div className="p-2 min-w-[220px]">
               <h3 className="font-bold text-sm mb-2">{iz.name}</h3>
@@ -543,6 +565,9 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
               },
             }}
           >
+            <Tooltip direction="top" offset={[0, -10]} className="!bg-indigo-600 !text-white">
+              <div className="text-xs font-semibold">{cluster.name}</div>
+            </Tooltip>
             <Popup>
               <div className="p-2 min-w-[220px]">
                 <h3 className="font-bold text-sm mb-2">{cluster.name}</h3>
@@ -584,6 +609,9 @@ export default function TopologyMapComponent(props: TopologyMapComponentProps) {
               },
             }}
           >
+            <Tooltip direction="top" offset={[0, -10]} className="!bg-purple-600 !text-white">
+              <div className="text-xs font-semibold">{factory.name}</div>
+            </Tooltip>
             <Popup>
               <div className="p-2 min-w-[220px]">
                 <h3 className="font-bold text-sm mb-2">{factory.name}</h3>

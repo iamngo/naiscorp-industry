@@ -143,6 +143,13 @@ export interface Supplier {
   reviewCount?: number;
   regions?: string[];
   headquarters?: string;
+  responseTimeHours?: number;
+  onTimeDeliveryRate?: number;
+  establishedYear?: number;
+  factoryArea?: number;
+  annualExportRevenueUSD?: number;
+  languages?: string[];
+  videoUrl?: string;
 }
 
 // Buyer
@@ -219,6 +226,7 @@ export interface Product {
   verifiedBy?: string;
   createdAt: string;
   updatedAt: string;
+  rating?: number;
 }
 
 // RFQ (Request for Quotation)
