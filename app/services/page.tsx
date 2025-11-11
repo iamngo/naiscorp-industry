@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Service, ServiceType } from '@/types/database';
 import { Search, Filter, Plus, Briefcase, Users, Truck, Zap, GraduationCap, Building2, Mail, Phone, CheckCircle, Clock, X } from 'lucide-react';
 
@@ -9,7 +9,20 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'verified' | 'pending'>('all');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+
+  const logServicesEvent = useCallback(async (payload: Record<string, unknown>) => {
+    try {
+      await fetch('/api/analytics/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.error('Failed to log services analytics', error);
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch services from API (mock for now)
@@ -36,14 +49,86 @@ export default function ServicesPage() {
     { value: 'other', label: 'Khác', icon: Briefcase },
   ];
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesType = selectedType === 'all' || service.serviceType === selectedType;
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const matchesSearch =
+        service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesSearch && matchesType;
-  });
+      const matchesType = selectedType === 'all' || service.serviceType === selectedType;
+
+      const matchesStatus =
+        selectedStatus === 'all' || service.verificationStatus === selectedStatus;
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [searchQuery, selectedStatus, selectedType, services]);
+
+  const serviceStats = useMemo(() => {
+    const total = services.length;
+    const verified = services.filter((service) => service.verificationStatus === 'verified').length;
+    const pending = services.filter((service) => service.verificationStatus === 'pending').length;
+    const strategicPartners = services.filter((service) => service.isStrategicPartner).length;
+    const avgResponse =
+      services.length > 0
+        ? Math.round(
+            (services.reduce((sum, service) => sum + (service.avgResponseHours ?? 0), 0) /
+              services.length) *
+              10,
+          ) / 10
+        : null;
+    const avgSatisfaction =
+      services.length > 0
+        ? Math.round(
+            services.reduce((sum, service) => sum + (service.satisfactionScore ?? 0), 0) /
+              services.length,
+          )
+        : null;
+
+    return {
+      total,
+      verified,
+      pending,
+      strategicPartners,
+      avgResponse,
+      avgSatisfaction,
+    };
+  }, [services]);
+
+  const serviceTypeDistribution = useMemo(() => {
+    const counts = serviceTypes.reduce<Record<string, number>>((acc, type) => {
+      acc[type.value] = 0;
+      return acc;
+    }, {});
+
+    services.forEach((service) => {
+      counts[service.serviceType] = (counts[service.serviceType] ?? 0) + 1;
+    });
+
+    return counts;
+  }, [serviceTypes, services]);
+
+  const handleContact = useCallback(
+    (service: Service) => {
+      logServicesEvent({
+        action: 'contact_service',
+        serviceId: service.id,
+        supplierId: service.supplierId,
+        status: service.verificationStatus,
+      });
+      alert(`Đã ghi nhận yêu cầu liên hệ dịch vụ "${service.title}" (Mock data).`);
+    },
+    [logServicesEvent],
+  );
+
+  useEffect(() => {
+    logServicesEvent({
+      action: 'filter_change',
+      query: searchQuery,
+      type: selectedType,
+      status: selectedStatus,
+    });
+  }, [logServicesEvent, searchQuery, selectedStatus, selectedType]);
 
   const getServiceTypeLabel = (type: ServiceType): string => {
     return serviceTypes.find(st => st.value === type)?.label || type;
@@ -77,7 +162,10 @@ export default function ServicesPage() {
               Industrial Services Hub
             </h1>
             <button
-              onClick={() => setShowRegisterModal(true)}
+              onClick={() => {
+                setShowRegisterModal(true);
+                logServicesEvent({ action: 'open_register_modal' });
+              }}
               className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
@@ -91,7 +179,7 @@ export default function ServicesPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -120,6 +208,77 @@ export default function ServicesPage() {
                 ))}
               </select>
             </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value as 'all' | 'verified' | 'pending')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="verified">Đã xác thực</option>
+                <option value="pending">Chờ xác thực</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics */}
+        <div className="grid gap-4 lg:grid-cols-4 mb-6">
+          <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+            <p className="text-xs uppercase text-blue-600 font-semibold">Tổng dịch vụ</p>
+            <p className="text-2xl font-bold text-blue-900 mt-1">{serviceStats.total}</p>
+            <p className="text-xs text-blue-600 mt-1">Đã xác thực: {serviceStats.verified}</p>
+          </div>
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+            <p className="text-xs uppercase text-emerald-600 font-semibold">Đối tác chiến lược</p>
+            <p className="text-2xl font-bold text-emerald-900 mt-1">{serviceStats.strategicPartners}</p>
+            <p className="text-xs text-emerald-600 mt-1">
+              Đang chờ xác thực: {serviceStats.pending}
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+            <p className="text-xs uppercase text-amber-600 font-semibold">Thời gian phản hồi TB</p>
+            <p className="text-2xl font-bold text-amber-900 mt-1">
+              {serviceStats.avgResponse !== null ? `${serviceStats.avgResponse}h` : '—'}
+            </p>
+            <p className="text-xs text-amber-600 mt-1">Dựa trên hồ sơ nhà cung cấp</p>
+          </div>
+          <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-4">
+            <p className="text-xs uppercase text-purple-600 font-semibold">Hài lòng khách hàng</p>
+            <p className="text-2xl font-bold text-purple-900 mt-1">
+              {serviceStats.avgSatisfaction !== null ? `${serviceStats.avgSatisfaction}%` : '—'}
+            </p>
+            <p className="text-xs text-purple-600 mt-1">Điểm khảo sát trung bình</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Phân bổ dịch vụ theo loại</h2>
+          <div className="space-y-2">
+            {serviceTypes.map((type) => {
+              const totalForType = serviceTypeDistribution[type.value] ?? 0;
+              const percentage =
+                services.length > 0 ? Math.round((totalForType / services.length) * 100) : 0;
+              return (
+                <div key={type.value}>
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>{type.label}</span>
+                    <span>
+                      {totalForType} dịch vụ · {percentage}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100">
+                    <div
+                      className="h-2 rounded-full bg-blue-500 transition-all"
+                      style={{ width: `${Math.min(100, percentage)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -181,6 +340,35 @@ export default function ServicesPage() {
                       {service.description}
                     </p>
 
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-4">
+                      {service.avgResponseHours !== undefined && (
+                        <div className="rounded-lg bg-blue-50 px-3 py-2">
+                          <p className="font-semibold text-blue-700">{service.avgResponseHours}h</p>
+                          <p>Thời gian phản hồi TB</p>
+                        </div>
+                      )}
+                      {service.satisfactionScore !== undefined && (
+                        <div className="rounded-lg bg-emerald-50 px-3 py-2">
+                          <p className="font-semibold text-emerald-700">{service.satisfactionScore}%</p>
+                          <p>Điểm hài lòng</p>
+                        </div>
+                      )}
+                      {service.activeContracts !== undefined && (
+                        <div className="rounded-lg bg-amber-50 px-3 py-2">
+                          <p className="font-semibold text-amber-700">{service.activeContracts}</p>
+                          <p>Hợp đồng đang hoạt động</p>
+                        </div>
+                      )}
+                      {service.lastEvaluationAt && (
+                        <div className="rounded-lg bg-purple-50 px-3 py-2">
+                          <p className="font-semibold text-purple-700">
+                            {new Date(service.lastEvaluationAt).toLocaleDateString('vi-VN')}
+                          </p>
+                          <p>Lần đánh giá gần nhất</p>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Price */}
                     {service.priceRange && (
                       <div className="mb-4 pt-4 border-t border-gray-200">
@@ -201,6 +389,7 @@ export default function ServicesPage() {
                     {/* Actions */}
                     <div className="mt-auto pt-4 border-t border-gray-200">
                       <button
+                        onClick={() => handleContact(service)}
                         className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         Liên hệ

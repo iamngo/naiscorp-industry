@@ -177,7 +177,7 @@
       "verificationStatus": "verified",
       "videoUrl": "https://www.youtube.com/watch?v=cmVIiLIMi-s",
       "esgStatus": "all",
-      "digitalTransformation": false,
+      "digitalTransformation": true,
       "contactEmail": "nganlazy02@gmail.com",
       "contactPhone": "0375950082",
       "productionCapacity": "10 triệu thanh gỗ / năm",
@@ -185,7 +185,7 @@
         "Gỗ"
       ],
       "createdAt": "2025-11-10T09:43:14.670Z",
-      "updatedAt": "2025-11-10T10:36:57.820Z",
+      "updatedAt": "2025-11-11T04:10:28.815Z",
       "verifiedAt": "2025-11-10T10:36:57.180Z"
     }
   ],
@@ -208,6 +208,10 @@
       "verificationStatus": "verified",
       "verifiedBy": "user-1",
       "isStrategicPartner": true,
+      "avgResponseHours": 6,
+      "activeContracts": 18,
+      "satisfactionScore": 92,
+      "lastEvaluationAt": "2024-03-15T00:00:00Z",
       "createdAt": "2024-02-01T00:00:00Z",
       "updatedAt": "2024-03-02T00:00:00Z"
     },
@@ -229,6 +233,10 @@
       "verificationStatus": "verified",
       "verifiedBy": "user-1",
       "isStrategicPartner": false,
+      "avgResponseHours": 9,
+      "activeContracts": 12,
+      "satisfactionScore": 88,
+      "lastEvaluationAt": "2024-03-10T00:00:00Z",
       "createdAt": "2024-02-05T00:00:00Z",
       "updatedAt": "2024-02-28T00:00:00Z"
     },
@@ -248,6 +256,10 @@
       },
       "verificationStatus": "pending",
       "isStrategicPartner": false,
+      "avgResponseHours": 14,
+      "activeContracts": 7,
+      "satisfactionScore": 81,
+      "lastEvaluationAt": "2024-02-20T00:00:00Z",
       "createdAt": "2024-02-10T00:00:00Z",
       "updatedAt": "2024-02-26T00:00:00Z"
     }
@@ -524,6 +536,377 @@
         "source": "marketplace"
       },
       "createdAt": "2025-11-11T03:35:23.721Z"
+    },
+    {
+      "id": "log-1762834077912",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T04:07:57.911Z"
+    },
+    {
+      "id": "log-1762834077929",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T04:07:57.929Z"
+    },
+    {
+      "id": "log-1762834124819",
+      "adminId": "system-analytics",
+      "action": "marketplace_search",
+      "entityType": "search",
+      "entityId": "search",
+      "details": {
+        "q": "",
+        "category": "all",
+        "verification": "all",
+        "minPrice": "",
+        "maxPrice": "",
+        "minMOQ": "",
+        "certifications": [],
+        "ratings": [],
+        "timestamp": "2025-11-11T04:08:44.562Z",
+        "source": "marketplace"
+      },
+      "createdAt": "2025-11-11T04:08:44.819Z"
+    },
+    {
+      "id": "log-1762834228824",
+      "adminId": "user-1",
+      "action": "update_factory",
+      "entityType": "factory",
+      "entityId": "factory-1762767794674",
+      "details": {
+        "updatedFields": [
+          "digitalTransformation"
+        ],
+        "previousVerification": "verified",
+        "newVerification": "verified",
+        "esgStatus": "all",
+        "digitalTransformation": true
+      },
+      "createdAt": "2025-11-11T04:10:28.824Z"
+    },
+    {
+      "id": "log-1762835734895",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T04:35:34.894Z"
+    },
+    {
+      "id": "log-1762835734915",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T04:35:34.915Z"
+    },
+    {
+      "id": "log-1762835740860",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "svc-1",
+      "details": {
+        "action": "contact_service",
+        "serviceId": "svc-1",
+        "supplierId": "supp-1",
+        "status": "verified",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T04:35:40.860Z"
+    },
+    {
+      "id": "log-1762835874978",
+      "adminId": "system-analytics",
+      "action": "marketplace_search",
+      "entityType": "search",
+      "entityId": "search",
+      "details": {
+        "q": "",
+        "category": "all",
+        "verification": "all",
+        "minPrice": "",
+        "maxPrice": "",
+        "minMOQ": "",
+        "certifications": [],
+        "ratings": [],
+        "timestamp": "2025-11-11T04:37:54.859Z",
+        "source": "marketplace"
+      },
+      "createdAt": "2025-11-11T04:37:54.977Z"
+    },
+    {
+      "id": "log-1762843593515",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "generate_plan",
+        "planId": "plan-1762843591705",
+        "budget": "100000000",
+        "industry": "Cơ khí",
+        "preferredLocation": "Bình Dương",
+        "investmentType": "new",
+        "recommendations": [
+          "iz-1"
+        ],
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:33.514Z"
+    },
+    {
+      "id": "log-1762843593552",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "assign_consultant",
+        "planId": "plan-1762843591705",
+        "consultantId": "consult-1",
+        "consultantName": "Nguyễn Minh Quân",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:33.552Z"
+    },
+    {
+      "id": "log-1762843593579",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "plan_insights",
+        "planId": "plan-1762843591705",
+        "insights": [
+          {
+            "title": "Mức độ phù hợp ngân sách",
+            "description": "Ngân sách của bạn 100.000.000 VND so với trung bình 4.800.000.000 VND/nhà máy.",
+            "score": 61
+          },
+          {
+            "title": "Khả năng đáp ứng vị trí",
+            "description": "Có ít nhất 1 KCN trong tỉnh/thành bạn ưu tiên.",
+            "score": 90
+          },
+          {
+            "title": "ESG & Chuyển đổi số",
+            "description": "Các KCN đề xuất đã được xác thực ESG/DX, sẵn sàng cho nhà đầu tư quốc tế.",
+            "score": 60
+          }
+        ],
+        "overallScore": 70,
+        "riskLevel": "Medium",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:33.579Z"
+    },
+    {
+      "id": "log-1762843596734",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "chat_message",
+        "contentLength": 2,
+        "planId": "plan-1762843591705",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:36.734Z"
+    },
+    {
+      "id": "log-1762843601967",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "chat_message",
+        "contentLength": 3,
+        "planId": "plan-1762843591705",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:41.967Z"
+    },
+    {
+      "id": "log-1762843608340",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762843591705",
+      "details": {
+        "action": "chat_message",
+        "contentLength": 15,
+        "planId": "plan-1762843591705",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T06:46:48.340Z"
+    },
+    {
+      "id": "log-1762843624549",
+      "adminId": "system-analytics",
+      "action": "marketplace_search",
+      "entityType": "search",
+      "entityId": "search",
+      "details": {
+        "q": "",
+        "category": "all",
+        "verification": "all",
+        "minPrice": "",
+        "maxPrice": "",
+        "minMOQ": "",
+        "certifications": [],
+        "ratings": [],
+        "timestamp": "2025-11-11T06:47:03.165Z",
+        "source": "marketplace"
+      },
+      "createdAt": "2025-11-11T06:47:04.549Z"
+    },
+    {
+      "id": "log-1762843634928",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:47:14.928Z"
+    },
+    {
+      "id": "log-1762843634947",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:47:14.947Z"
+    },
+    {
+      "id": "log-1762843728930",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:48:48.929Z"
+    },
+    {
+      "id": "log-1762843728970",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:48:48.969Z"
+    },
+    {
+      "id": "log-1762843733132",
+      "adminId": "system-analytics",
+      "action": "marketplace_search",
+      "entityType": "search",
+      "entityId": "search",
+      "details": {
+        "q": "",
+        "category": "all",
+        "verification": "all",
+        "minPrice": "",
+        "maxPrice": "",
+        "minMOQ": "",
+        "certifications": [],
+        "ratings": [],
+        "timestamp": "2025-11-11T06:48:52.383Z",
+        "source": "marketplace"
+      },
+      "createdAt": "2025-11-11T06:48:53.132Z"
+    },
+    {
+      "id": "log-1762843734602",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:48:54.602Z"
+    },
+    {
+      "id": "log-1762843734625",
+      "adminId": "system-analytics",
+      "action": "services_hub_event",
+      "entityType": "services_hub",
+      "entityId": "filter",
+      "details": {
+        "action": "filter_change",
+        "query": "",
+        "type": "all",
+        "status": "all",
+        "source": "services_hub"
+      },
+      "createdAt": "2025-11-11T06:48:54.625Z"
     }
   ]
 }

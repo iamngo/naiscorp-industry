@@ -268,6 +268,10 @@ export interface Service {
   verificationStatus: VerificationStatus;
   verifiedBy?: string;
   isStrategicPartner: boolean;
+  avgResponseHours?: number;
+  activeContracts?: number;
+  satisfactionScore?: number; // 0-100
+  lastEvaluationAt?: string;
   createdAt: string;
   updatedAt: string;
 }

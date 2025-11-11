@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   mockIndustrialZones,
   mockRegions,
@@ -26,7 +26,7 @@ import {
   Link as LinkIcon,
   Shield,
 } from 'lucide-react';
-import { Consultant } from '@/types/database';
+import type { Consultant, IndustrialZone } from '@/types/database';
 
 export default function InvestorPage() {
   const [budget, setBudget] = useState('');
@@ -48,6 +48,23 @@ export default function InvestorPage() {
   const [decisionInsights, setDecisionInsights] = useState<Array<{ title: string; description: string; score: number }>>([]);
   const [overallScore, setOverallScore] = useState<number | null>(null);
   const [riskLevel, setRiskLevel] = useState<'Low' | 'Medium' | 'High' | null>(null);
+  const [recommendedIZDetails, setRecommendedIZDetails] = useState<IndustrialZone[]>([]);
+  const planSessionRef = useRef<string | null>(null);
+
+  const logInvestmentEvent = useCallback(async (payload: Record<string, unknown>) => {
+    try {
+      await fetch('/api/analytics/investment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          planId: payload.planId ?? planSessionRef.current ?? undefined,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to log investment analytics', error);
+    }
+  }, []);
 
   const industries = ['Điện tử', 'Cơ khí', 'Dệt may', 'Hóa chất', 'Thực phẩm', 'Vật liệu xây dựng'];
   const provinces = Array.from(new Set(mockIndustrialZones.map((iz) => iz.province)));
@@ -101,6 +118,19 @@ export default function InvestorPage() {
     }
   };
 
+  useEffect(() => {
+    if (!planSessionRef.current || decisionInsights.length === 0) {
+      return;
+    }
+    logInvestmentEvent({
+      action: 'plan_insights',
+      planId: planSessionRef.current,
+      insights: decisionInsights,
+      overallScore,
+      riskLevel,
+    });
+  }, [decisionInsights, logInvestmentEvent, overallScore, riskLevel]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -117,8 +147,19 @@ export default function InvestorPage() {
 
       const recommendedIds = recommendedIZObjects.map((iz) => iz.id);
       setRecommendations(recommendedIds);
+      setRecommendedIZDetails(recommendedIZObjects);
       setIsSubmitting(false);
       setPlanGenerated(true);
+      planSessionRef.current = `plan-${Date.now()}`;
+      logInvestmentEvent({
+        action: 'generate_plan',
+        planId: planSessionRef.current,
+        budget,
+        industry,
+        preferredLocation,
+        investmentType,
+        recommendations: recommendedIds,
+      });
 
       const primaryRegionName = findRegionName(recommendedIZObjects[0]?.regionId);
       const consultantPool = getConsultantsByIndustry(industry, primaryRegionName);
@@ -127,6 +168,14 @@ export default function InvestorPage() {
       setConsultantStatus('pending');
       setSelectedMeetingSlot('');
       setAutoConnectResult(null);
+      if (consultantToAssign) {
+        logInvestmentEvent({
+          action: 'assign_consultant',
+          planId: planSessionRef.current,
+          consultantId: consultantToAssign.id,
+          consultantName: consultantToAssign.name,
+        });
+      }
 
       const averageEmployees =
         recommendedIZObjects.length > 0
@@ -157,6 +206,10 @@ export default function InvestorPage() {
     const userMessage = chatInput;
     setChatMessages((prev) => [...prev, { role: 'user', message: userMessage }]);
     setChatInput('');
+    logInvestmentEvent({
+      action: 'chat_message',
+      contentLength: userMessage.length,
+    });
 
     setTimeout(() => {
       let botResponse = '';
@@ -194,9 +247,123 @@ export default function InvestorPage() {
     }
   };
 
-  const handleDownloadPlan = () => {
-    alert('Đang tải báo cáo kế hoạch đầu tư (PDF) - Mock data');
-  };
+  const planSummary = useMemo(() => {
+    return {
+      budgetDisplay: budget ? `${Number(budget).toLocaleString('vi-VN')} VND` : 'N/A',
+      industry: industry || 'Không chỉ định',
+      location: preferredLocation || 'Không chỉ định',
+      investmentType,
+      insights: decisionInsights,
+      overallScore,
+      riskLevel,
+      izs: recommendedIZDetails.map((iz, index) => ({
+        index: index + 1,
+        name: iz.name,
+        province: iz.province,
+        owner: iz.owner,
+        esgStatus: iz.esgStatus,
+        totalEmployees: iz.totalEmployees,
+      })),
+    };
+  }, [
+    budget,
+    decisionInsights,
+    industry,
+    investmentType,
+    overallScore,
+    preferredLocation,
+    recommendedIZDetails,
+    riskLevel,
+  ]);
+
+  const handleDownloadPlan = useCallback(async () => {
+    if (!planGenerated || planSummary.izs.length === 0) {
+      alert('Vui lòng tạo kế hoạch đầu tư trước khi tải PDF.');
+      return;
+    }
+
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text('Báo cáo kế hoạch đầu tư', 14, 20);
+
+    doc.setFontSize(11);
+    const overviewLines = doc.splitTextToSize(
+      [
+        `Ngân sách: ${planSummary.budgetDisplay}`,
+        `Ngành ưu tiên: ${planSummary.industry}`,
+        `Địa điểm ưu tiên: ${planSummary.location}`,
+        `Loại đầu tư: ${
+          investmentType === 'new' ? 'Xây mới' : investmentType === 'acquisition' ? 'Mua lại' : 'Góp vốn'
+        }`,
+        `Chỉ số phù hợp: ${
+          planSummary.overallScore !== null ? `${planSummary.overallScore}/100` : 'Đang cập nhật'
+        }`,
+        `Mức độ rủi ro: ${planSummary.riskLevel ?? 'Đang cập nhật'}`,
+      ].join('\n'),
+      180,
+    );
+    doc.text(overviewLines, 14, 32);
+
+    let y = 32 + overviewLines.length * 6 + 6;
+    doc.setFontSize(12);
+    doc.text('Danh sách khu công nghiệp đề xuất', 14, y);
+    y += 8;
+    doc.setFontSize(11);
+
+    planSummary.izs.forEach((iz, idx) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      const lines = doc.splitTextToSize(
+        `${iz.index}. ${iz.name} (${iz.province}) · Chủ đầu tư: ${iz.owner}. Nhân lực: ${
+          iz.totalEmployees
+        } · ESG: ${iz.esgStatus}`,
+        180,
+      );
+      doc.text(lines, 14, y);
+      y += lines.length * 6 + 4;
+    });
+
+    if (planSummary.insights.length > 0) {
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(12);
+      doc.text('Phân tích & khuyến nghị', 14, y);
+      y += 8;
+      doc.setFontSize(11);
+      planSummary.insights.forEach((insight) => {
+        const lines = doc.splitTextToSize(
+          `• ${insight.title} (${insight.score}/100): ${insight.description}`,
+          180,
+        );
+        doc.text(lines, 14, y);
+        y += lines.length * 6 + 4;
+      });
+    }
+
+    doc.save(`investment-plan-${Date.now()}.pdf`);
+
+    logInvestmentEvent({
+      action: 'download_plan',
+      planId: planSessionRef.current,
+      recommendations,
+      overallScore,
+      riskLevel,
+    });
+  }, [
+    investmentType,
+    logInvestmentEvent,
+    overallScore,
+    planGenerated,
+    planSummary,
+    recommendations,
+    riskLevel,
+  ]);
 
   const handleConfirmMeeting = () => {
     if (!assignedConsultant || !selectedMeetingSlot) return;
@@ -208,6 +375,11 @@ export default function InvestorPage() {
         message: `Đã đặt lịch với chuyên gia ${assignedConsultant.name} vào ${selectedMeetingSlot}. Đội ngũ sẽ gửi thư mời ngay sau đây.`,
       },
     ]);
+    logInvestmentEvent({
+      action: 'confirm_meeting',
+      consultantId: assignedConsultant?.id,
+      meetingSlot: selectedMeetingSlot,
+    });
   };
 
   const handleAutoConnect = async () => {
@@ -241,8 +413,19 @@ export default function InvestorPage() {
 
       const successCount = results.filter((item) => item.success).length;
       setAutoConnectResult(`Đã gửi ${successCount}/${results.length} yêu cầu kết nối tự động (Mock data).`);
+      logInvestmentEvent({
+        action: 'auto_connect',
+        planId: planSessionRef.current,
+        success: successCount,
+        total: results.length,
+      });
     } catch (error) {
       setAutoConnectResult('Có lỗi xảy ra khi gửi yêu cầu kết nối (Mock data).');
+      logInvestmentEvent({
+        action: 'auto_connect_error',
+        planId: planSessionRef.current,
+        error: (error as Error)?.message ?? 'unknown_error',
+      });
     } finally {
       setAutoConnectLoading(false);
     }

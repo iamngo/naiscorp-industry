@@ -42,6 +42,22 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<
     'iz' | 'factory' | 'services' | 'products' | 'supplier' | 'buyer' | 'investor' | 'users' | 'content' | 'reports'
   >('iz');
+  const [showIZModal, setShowIZModal] = useState(false);
+  const [newIZForm, setNewIZForm] = useState({
+    name: '',
+    owner: '',
+    province: '',
+    district: '',
+    address: '',
+    contactEmail: '',
+    contactPhone: '',
+    area: '',
+    totalCompanies: '',
+    totalEmployees: '',
+    description: '',
+    industries: '' as string | string[],
+  });
+  const [creatingIZ, setCreatingIZ] = useState(false);
 
   type BuyerLead = {
     id: string;
@@ -50,6 +66,7 @@ export default function AdminDashboard() {
     opportunities: number;
     stage: 'Đang quan tâm' | 'Đàm phán' | 'Đã ký';
     lastContact: string;
+    value: number;
   };
 
   type InvestorPipeline = {
@@ -78,7 +95,7 @@ export default function AdminDashboard() {
     scheduledAt?: string;
   };
 
-  const [buyerLeads] = useState<BuyerLead[]>(() =>
+  const [buyerLeads, setBuyerLeads] = useState<BuyerLead[]>(() =>
     mockBuyerLeads.map((lead) => ({
       id: lead.id,
       company: lead.company,
@@ -90,7 +107,7 @@ export default function AdminDashboard() {
     })),
   );
 
-  const [investorDeals] = useState<InvestorPipeline[]>(() =>
+  const [investorDeals, setInvestorDeals] = useState<InvestorPipeline[]>(() =>
     mockInvestorDeals.map((deal) => ({
       id: deal.id,
       fundName: deal.fundName,
@@ -101,7 +118,7 @@ export default function AdminDashboard() {
     })),
   );
 
-  const [userAccounts] = useState<UserAccount[]>([
+  const [userAccounts, setUserAccounts] = useState<UserAccount[]>([
     {
       id: 'user-1',
       fullName: 'Admin System',
@@ -125,7 +142,7 @@ export default function AdminDashboard() {
     },
   ]);
 
-  const [contentQueue] = useState<ContentItem[]>([
+  const [contentQueue, setContentQueue] = useState<ContentItem[]>([
     {
       id: 'content-1',
       title: 'Báo cáo xu hướng chuỗi cung ứng miền Bắc 2025',
@@ -149,6 +166,50 @@ export default function AdminDashboard() {
       status: 'published',
     },
   ]);
+
+  const [roleMatrix, setRoleMatrix] = useState(
+    [
+      {
+        role: 'Admin',
+        permissions: {
+          manageIZ: true,
+          manageFactories: true,
+          manageMarketplace: true,
+          manageContent: true,
+          exportReports: true,
+        },
+      },
+      {
+        role: 'Verifier',
+        permissions: {
+          manageIZ: true,
+          manageFactories: true,
+          manageMarketplace: false,
+          manageContent: false,
+          exportReports: true,
+        },
+      },
+      {
+        role: 'Content Editor',
+        permissions: {
+          manageIZ: false,
+          manageFactories: false,
+          manageMarketplace: false,
+          manageContent: true,
+          exportReports: false,
+        },
+      },
+    ] as Array<{
+      role: string;
+      permissions: {
+        manageIZ: boolean;
+        manageFactories: boolean;
+        manageMarketplace: boolean;
+        manageContent: boolean;
+        exportReports: boolean;
+      };
+    }>,
+  );
 
   const esgOptions: { value: ESGStatus; label: string }[] = [
     { value: 'none', label: 'Không' },
@@ -446,6 +507,144 @@ export default function AdminDashboard() {
     );
   };
 
+  const handleBuyerStageChange = (leadId: string, stage: BuyerLead['stage']) => {
+    setBuyerLeads((prev) =>
+      prev.map((lead) =>
+        lead.id === leadId
+          ? {
+              ...lead,
+              stage,
+              lastContact: new Date().toLocaleDateString('vi-VN'),
+            }
+          : lead,
+      ),
+    );
+  };
+
+  const handleInvestorStatusChange = (dealId: string, status: InvestorPipeline['status']) => {
+    setInvestorDeals((prev) =>
+      prev.map((deal) =>
+        deal.id === dealId
+          ? {
+              ...deal,
+              status,
+            }
+          : deal,
+      ),
+    );
+  };
+
+  const handleInvestorOwnerChange = (dealId: string, owner: string) => {
+    setInvestorDeals((prev) =>
+      prev.map((deal) => (deal.id === dealId ? { ...deal, owner } : deal)),
+    );
+  };
+
+  const handleContentStatusUpdate = (contentId: string, status: ContentItem['status']) => {
+    setContentQueue((prev) =>
+      prev.map((item) =>
+        item.id === contentId
+          ? {
+              ...item,
+              status,
+              scheduledAt: status === 'scheduled' ? item.scheduledAt ?? new Date().toISOString().slice(0, 10) : item.scheduledAt,
+            }
+          : item,
+      ),
+    );
+  };
+
+  const handleContentSchedule = (contentId: string, date: string) => {
+    setContentQueue((prev) =>
+      prev.map((item) => (item.id === contentId ? { ...item, scheduledAt: date, status: 'scheduled' } : item)),
+    );
+  };
+
+  const handleRolePermissionToggle = (
+    role: string,
+    permission: keyof (typeof roleMatrix)[number]['permissions'],
+  ) => {
+    setRoleMatrix((prev) =>
+      prev.map((entry) =>
+        entry.role === role
+          ? {
+              ...entry,
+              permissions: {
+                ...entry.permissions,
+                [permission]: !entry.permissions[permission],
+              },
+            }
+          : entry,
+      ),
+    );
+  };
+
+  const resetNewIZForm = () => {
+    setNewIZForm({
+      name: '',
+      owner: '',
+      province: '',
+      district: '',
+      address: '',
+      contactEmail: '',
+      contactPhone: '',
+      area: '',
+      totalCompanies: '',
+      totalEmployees: '',
+      description: '',
+      industries: '',
+    });
+  };
+
+  const handleCreateIZ = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCreatingIZ(true);
+    try {
+      const response = await fetch('/api/industrial-zones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newIZForm.name,
+          owner: newIZForm.owner,
+          province: newIZForm.province,
+          district: newIZForm.district,
+          address: newIZForm.address,
+          contactEmail: newIZForm.contactEmail,
+          contactPhone: newIZForm.contactPhone,
+          area: Number(newIZForm.area) || 0,
+          totalCompanies: Number(newIZForm.totalCompanies) || 0,
+          totalEmployees: Number(newIZForm.totalEmployees) || 0,
+          description: newIZForm.description,
+          industries:
+            typeof newIZForm.industries === 'string'
+              ? newIZForm.industries
+                  .split(',')
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+              : newIZForm.industries,
+          verificationStatus: 'pending',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create IZ');
+      }
+
+      const json = await response.json();
+      if (json?.data) {
+        setIZs((prev) => [json.data, ...prev]);
+      }
+      resetNewIZForm();
+      setShowIZModal(false);
+      alert('Đã ghi nhận đăng ký KCN mới, chờ xác minh.');
+    } catch (error) {
+      console.error('[AdminDashboard] create IZ failed', error);
+      alert('Không thể tạo KCN mới, vui lòng thử lại.');
+    } finally {
+      setCreatingIZ(false);
+    }
+  };
+
   const stats = {
     total: izs.length,
     verified: izs.filter(iz => iz.verificationStatus === 'verified').length,
@@ -487,8 +686,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-2 mb-2">
@@ -706,7 +906,7 @@ export default function AdminDashboard() {
         {/* Filter */}
         {activeTab === 'iz' && (
           <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-3">
               <Filter className="w-5 h-5 text-gray-500" />
               <button
                 onClick={() => setFilter('all')}
@@ -738,6 +938,14 @@ export default function AdminDashboard() {
               >
                 Đã xác thực ({stats.verified})
               </button>
+              <div className="ml-auto flex items-center">
+                <button
+                  onClick={() => setShowIZModal(true)}
+                  className="inline-flex items-center space-x-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  <span>Đăng ký KCN mới</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1482,7 +1690,23 @@ export default function AdminDashboard() {
                   <div className="mt-1 text-xs text-gray-500">
                     Giá trị pipeline: {(lead.value / 1_000_000).toFixed(1)}M USD
                   </div>
-                  <div className="mt-3 text-right">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-500">Cập nhật trạng thái:</span>
+                      {(['Đang quan tâm', 'Đàm phán', 'Đã ký'] as const).map((stage) => (
+                        <button
+                          key={stage}
+                          onClick={() => handleBuyerStageChange(lead.id, stage)}
+                          className={`rounded-full px-2.5 py-1 ${
+                            lead.stage === stage
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {stage}
+                        </button>
+                      ))}
+                    </div>
                     <button className="text-sm text-blue-600 hover:text-blue-700">Xem chi tiết lead →</button>
                   </div>
                 </div>
@@ -1505,7 +1729,14 @@ export default function AdminDashboard() {
                     <span className="text-sm font-semibold text-emerald-600">{deal.budget}</span>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
-                    <span>Owner: {deal.owner}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 uppercase">Owner</span>
+                      <input
+                        value={deal.owner}
+                        onChange={(e) => handleInvestorOwnerChange(deal.id, e.target.value)}
+                        className="rounded border border-gray-200 px-2 py-1 text-xs focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-medium ${
                         deal.status === 'Ký NDA'
@@ -1517,6 +1748,25 @@ export default function AdminDashboard() {
                     >
                       {deal.status}
                     </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="text-gray-500">Cập nhật trạng thái:</span>
+                    {(['Đánh giá', 'Hẹn gặp', 'Ký NDA'] as const).map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => handleInvestorStatusChange(deal.id, status)}
+                        className={`rounded-full px-2.5 py-1 ${
+                          deal.status === status
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                    <button className="ml-auto text-sm text-blue-600 hover:text-blue-700">
+                      Xem hồ sơ nhà đầu tư →
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1574,6 +1824,45 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Ma trận phân quyền</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs uppercase text-gray-500">
+                      <th className="px-3 py-2">Vai trò</th>
+                      <th className="px-3 py-2">Quản lý KCN</th>
+                      <th className="px-3 py-2">Quản lý Nhà máy</th>
+                      <th className="px-3 py-2">Marketplace</th>
+                      <th className="px-3 py-2">Nội dung</th>
+                      <th className="px-3 py-2">Xuất báo cáo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roleMatrix.map((entry) => (
+                      <tr key={entry.role} className="odd:bg-white even:bg-gray-100">
+                        <td className="px-3 py-2 font-medium text-gray-800">{entry.role}</td>
+                        {(['manageIZ', 'manageFactories', 'manageMarketplace', 'manageContent', 'exportReports'] as const).map(
+                          (permission) => (
+                            <td key={permission} className="px-3 py-2">
+                              <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                                <input
+                                  type="checkbox"
+                                  checked={entry.permissions[permission]}
+                                  onChange={() => handleRolePermissionToggle(entry.role, permission)}
+                                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>{entry.permissions[permission] ? 'Có' : 'Không'}</span>
+                              </label>
+                            </td>
+                          ),
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1604,13 +1893,38 @@ export default function AdminDashboard() {
                     <span>Owner: {item.owner}</span>
                     {item.scheduledAt && <span>Dự kiến: {item.scheduledAt}</span>}
                   </div>
-                  <div className="mt-3 flex space-x-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button className="rounded bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100">
                       Xem nội dung
                     </button>
-                    <button className="rounded bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200">
-                      Phê duyệt
+                    <button
+                      onClick={() => handleContentStatusUpdate(item.id, 'published')}
+                      className="rounded bg-green-100 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-200"
+                    >
+                      Xuất bản
                     </button>
+                    <button
+                      onClick={() => handleContentStatusUpdate(item.id, 'pending')}
+                      className="rounded bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 hover:bg-yellow-200"
+                    >
+                      Đưa về pending
+                    </button>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <label htmlFor={`schedule-${item.id}`}>Lịch:</label>
+                      <input
+                        id={`schedule-${item.id}`}
+                        type="date"
+                        value={item.scheduledAt ?? ''}
+                        onChange={(e) => handleContentSchedule(item.id, e.target.value)}
+                        className="rounded border border-gray-200 px-2 py-1 focus:border-blue-500 focus:outline-none"
+                      />
+                      <button
+                        onClick={() => handleContentStatusUpdate(item.id, 'scheduled')}
+                        className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                      >
+                        Lên lịch
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1689,8 +2003,159 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+
+      {showIZModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4">
+          <div className="w-full max-w-3xl rounded-lg bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Đăng ký Khu công nghiệp mới</h3>
+                <p className="text-xs text-gray-500">Hồ sơ sẽ ở trạng thái chờ xác minh sau khi gửi.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowIZModal(false);
+                  resetNewIZForm();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleCreateIZ} className="max-h-[80vh] overflow-y-auto px-6 py-4 space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="text-sm text-gray-600">
+                  Tên KCN *
+                  <input
+                    value={newIZForm.name}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, name: e.target.value }))}
+                    required
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Chủ đầu tư *
+                  <input
+                    value={newIZForm.owner}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, owner: e.target.value }))}
+                    required
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Tỉnh/Thành *
+                  <input
+                    value={newIZForm.province}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, province: e.target.value }))}
+                    required
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Quận/Huyện *
+                  <input
+                    value={newIZForm.district}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, district: e.target.value }))}
+                    required
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600 md:col-span-2">
+                  Địa chỉ
+                  <input
+                    value={newIZForm.address}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, address: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Email liên hệ
+                  <input
+                    type="email"
+                    value={newIZForm.contactEmail}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, contactEmail: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Số điện thoại
+                  <input
+                    value={newIZForm.contactPhone}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, contactPhone: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Diện tích (ha)
+                  <input
+                    type="number"
+                    value={newIZForm.area}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, area: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Doanh nghiệp
+                  <input
+                    type="number"
+                    value={newIZForm.totalCompanies}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, totalCompanies: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600">
+                  Lao động
+                  <input
+                    type="number"
+                    value={newIZForm.totalEmployees}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, totalEmployees: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600 md:col-span-2">
+                  Ngành mũi nhọn (phân tách bởi dấu phẩy)
+                  <input
+                    value={typeof newIZForm.industries === 'string' ? newIZForm.industries : newIZForm.industries.join(', ')}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, industries: e.target.value }))}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="text-sm text-gray-600 md:col-span-2">
+                  Mô tả
+                  <textarea
+                    value={newIZForm.description}
+                    onChange={(e) => setNewIZForm((prev) => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+              </div>
+              <div className="flex items-center justify-end gap-2 border-t border-gray-200 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowIZModal(false);
+                    resetNewIZForm();
+                  }}
+                  className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingIZ}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-gray-400"
+                >
+                  {creatingIZ ? 'Đang gửi...' : 'Gửi phê duyệt'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
