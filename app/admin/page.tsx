@@ -27,6 +27,8 @@ import {
   Link2,
   Package,
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import type {
   IndustrialZone,
   Factory,
@@ -99,6 +101,11 @@ export default function AdminDashboard() {
     mediaUrls: '',
   });
   const [exportingReports, setExportingReports] = useState(false);
+  const { language } = useLanguage();
+  const t = useCallback(
+    (vi: string, en: string) => (language === 'vi' ? vi : en),
+    [language],
+  );
 
   type UserAccount = {
     id: string;
@@ -184,13 +191,16 @@ export default function AdminDashboard() {
     }>,
   );
 
-  const esgOptions: { value: ESGStatus; label: string }[] = [
-    { value: 'none', label: 'Không' },
-    { value: 'environmental', label: 'Environmental' },
-    { value: 'social', label: 'Social' },
-    { value: 'governance', label: 'Governance' },
-    { value: 'all', label: 'ESG toàn diện' },
-  ];
+  const esgOptions: { value: ESGStatus; label: string }[] = useMemo(
+    () => [
+      { value: 'none', label: t('Không', 'None') },
+      { value: 'environmental', label: t('Environmental', 'Environmental') },
+      { value: 'social', label: t('Social', 'Social') },
+      { value: 'governance', label: t('Governance', 'Governance') },
+      { value: 'all', label: t('ESG toàn diện', 'Full ESG') },
+    ],
+    [t],
+  );
 
   const fetchIZs = useCallback(async () => {
     const response = await fetch('/api/industrial-zones', {
@@ -364,10 +374,14 @@ export default function AdminDashboard() {
         );
         const latestIZs = await fetchIZs();
         setIZs(latestIZs);
-        alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} khu công nghiệp (mock data)`);
+        alert(
+          status === 'verified'
+            ? t('Đã xác thực khu công nghiệp (mock data)', 'Zone marked as verified (mock data)')
+            : t('Đã từ chối khu công nghiệp (mock data)', 'Zone marked as rejected (mock data)'),
+        );
       }
     } catch {
-      alert('Có lỗi xảy ra');
+      alert(t('Có lỗi xảy ra', 'An error occurred'));
     }
   };
 
@@ -389,7 +403,12 @@ export default function AdminDashboard() {
           statusCode: res.status,
           errorPayload,
         });
-        alert('Có lỗi xảy ra khi cập nhật trạng thái nhà máy');
+        alert(
+          t(
+            'Có lỗi xảy ra khi cập nhật trạng thái nhà máy',
+            'Failed to update factory status',
+          ),
+        );
         return;
       }
 
@@ -398,10 +417,19 @@ export default function AdminDashboard() {
         setFactories((prev) => prev.map((factory) => (factory.id === factoryId ? json.data : factory)));
       }
 
-      alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} nhà máy`);
+      alert(
+        status === 'verified'
+          ? t('Đã xác thực nhà máy', 'Factory verified')
+          : t('Đã từ chối nhà máy', 'Factory rejected'),
+      );
     } catch (error) {
       console.error('[AdminDashboard] verify factory failed', error);
-      alert('Có lỗi xảy ra khi cập nhật trạng thái nhà máy');
+      alert(
+        t(
+          'Có lỗi xảy ra khi cập nhật trạng thái nhà máy',
+          'Failed to update factory status',
+        ),
+      );
     }
   };
 
@@ -430,7 +458,7 @@ export default function AdminDashboard() {
 
       if (!res.ok) {
         console.error('[AdminDashboard] save factory failed', { statusCode: res.status });
-        alert('Không thể lưu thay đổi nhà máy');
+        alert(t('Không thể lưu thay đổi nhà máy', 'Unable to save factory changes'));
         return;
       }
 
@@ -443,7 +471,7 @@ export default function AdminDashboard() {
       setActiveFactory(null);
     } catch (error) {
       console.error('[AdminDashboard] save factory failed', error);
-      alert('Không thể lưu thay đổi nhà máy');
+      alert(t('Không thể lưu thay đổi nhà máy', 'Unable to save factory changes'));
     }
   };
 
@@ -473,7 +501,7 @@ export default function AdminDashboard() {
 
       if (!res.ok) {
         console.error('[AdminDashboard] save product failed', { statusCode: res.status });
-        alert('Không thể lưu thay đổi sản phẩm');
+        alert(t('Không thể lưu thay đổi sản phẩm', 'Unable to save product changes'));
         return;
       }
 
@@ -486,7 +514,7 @@ export default function AdminDashboard() {
       setActiveProduct(null);
     } catch (error) {
       console.error('[AdminDashboard] save product failed', error);
-      alert('Không thể lưu thay đổi sản phẩm');
+      alert(t('Không thể lưu thay đổi sản phẩm', 'Unable to save product changes'));
     }
   };
 
@@ -506,7 +534,7 @@ export default function AdminDashboard() {
 
       if (!res.ok) {
         console.error('[AdminDashboard] update investment plan failed', { statusCode: res.status });
-        alert('Không thể cập nhật kế hoạch đầu tư');
+        alert(t('Không thể cập nhật kế hoạch đầu tư', 'Unable to update investment plan'));
         return;
       }
 
@@ -516,7 +544,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] update investment plan failed', error);
-      alert('Không thể cập nhật kế hoạch đầu tư');
+      alert(t('Không thể cập nhật kế hoạch đầu tư', 'Unable to update investment plan'));
     }
   };
 
@@ -590,7 +618,7 @@ export default function AdminDashboard() {
       doc.save('naiscorp-cms-report.pdf');
     } catch (error) {
       console.error('[AdminDashboard] export report pdf failed', error);
-      alert('Không thể xuất PDF, vui lòng thử lại.');
+      alert(t('Không thể xuất PDF, vui lòng thử lại.', 'Unable to export PDF, please try again.'));
     } finally {
       setExportingReports(false);
     }
@@ -767,7 +795,12 @@ export default function AdminDashboard() {
         }),
       });
       if (!res.ok) {
-        alert('Có lỗi xảy ra khi cập nhật sản phẩm');
+        alert(
+          t(
+            'Có lỗi xảy ra khi cập nhật sản phẩm',
+            'Failed to update product',
+          ),
+        );
         return;
       }
       const json = await res.json();
@@ -775,10 +808,14 @@ export default function AdminDashboard() {
       if (updated) {
         setProducts((prev) => prev.map((p) => (p.id === productId ? updated : p)));
       }
-      alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} sản phẩm`);
+      alert(
+        status === 'verified'
+          ? t('Đã xác thực sản phẩm', 'Product verified')
+          : t('Đã từ chối sản phẩm', 'Product rejected'),
+      );
     } catch (error) {
       console.error('[AdminDashboard] verify product failed', error);
-      alert('Có lỗi xảy ra');
+      alert(t('Có lỗi xảy ra', 'An error occurred'));
     }
   };
 
@@ -800,10 +837,14 @@ export default function AdminDashboard() {
         );
         const latestServices = await fetchServices();
         setServices(latestServices);
-        alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} dịch vụ (mock data)`);
+        alert(
+          status === 'verified'
+            ? t('Đã xác thực dịch vụ (mock data)', 'Service verified (mock data)')
+            : t('Đã từ chối dịch vụ (mock data)', 'Service rejected (mock data)'),
+        );
       }
     } catch {
-      alert('Có lỗi xảy ra');
+      alert(t('Có lỗi xảy ra', 'An error occurred'));
     }
   };
 
@@ -816,7 +857,7 @@ export default function AdminDashboard() {
       });
 
       if (!res.ok) {
-        alert('Không thể cập nhật badge dịch vụ');
+        alert(t('Không thể cập nhật badge dịch vụ', 'Unable to update service badge'));
         return;
       }
 
@@ -826,7 +867,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] update service badge failed', error);
-      alert('Không thể cập nhật badge dịch vụ');
+      alert(t('Không thể cập nhật badge dịch vụ', 'Unable to update service badge'));
     }
   };
 
@@ -849,7 +890,12 @@ export default function AdminDashboard() {
       });
 
       if (!res.ok) {
-        alert('Không thể cập nhật liên kết KCN cho dịch vụ');
+        alert(
+          t(
+            'Không thể cập nhật liên kết KCN cho dịch vụ',
+            'Unable to update IZ linkage for service',
+          ),
+        );
         return;
       }
 
@@ -859,7 +905,12 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] update service iz failed', error);
-      alert('Không thể cập nhật liên kết KCN cho dịch vụ');
+      alert(
+        t(
+          'Không thể cập nhật liên kết KCN cho dịch vụ',
+          'Unable to update IZ linkage for service',
+        ),
+      );
     }
   };
 
@@ -876,7 +927,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] update IZ ESG failed', error);
-      alert('Không thể cập nhật ESG cho KCN.');
+      alert(t('Không thể cập nhật ESG cho KCN.', 'Unable to update IZ ESG status.'));
     }
   };
 
@@ -893,7 +944,12 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] toggle IZ DX failed', error);
-      alert('Không thể cập nhật trạng thái chuyển đổi số cho KCN.');
+      alert(
+        t(
+          'Không thể cập nhật trạng thái chuyển đổi số cho KCN.',
+          'Unable to update IZ digital transformation status.',
+        ),
+      );
     }
   };
 
@@ -910,7 +966,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] update factory ESG failed', error);
-      alert('Không thể cập nhật ESG cho nhà máy.');
+      alert(t('Không thể cập nhật ESG cho nhà máy.', 'Unable to update factory ESG status.'));
     }
   };
 
@@ -927,7 +983,12 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('[AdminDashboard] toggle factory DX failed', error);
-      alert('Không thể cập nhật trạng thái chuyển đổi số cho nhà máy.');
+      alert(
+        t(
+          'Không thể cập nhật trạng thái chuyển đổi số cho nhà máy.',
+          'Unable to update factory digital transformation status.',
+        ),
+      );
     }
   };
 
@@ -946,11 +1007,16 @@ export default function AdminDashboard() {
         if (json?.data) {
           setSuppliers((prev) => prev.map((supplier) => (supplier.id === supplierId ? json.data : supplier)));
         }
-        alert(`Cập nhật trạng thái nhà cung cấp thành công`);
+        alert(t('Cập nhật trạng thái nhà cung cấp thành công', 'Supplier status updated'));
       })
       .catch((error) => {
         console.error('[AdminDashboard] update supplier status failed', error);
-        alert('Có lỗi xảy ra khi cập nhật nhà cung cấp');
+        alert(
+          t(
+            'Có lỗi xảy ra khi cập nhật nhà cung cấp',
+            'Failed to update supplier',
+          ),
+        );
       });
   };
 
@@ -974,7 +1040,7 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] toggle supplier strategic failed', error);
-        alert('Không thể cập nhật badge nhà cung cấp');
+        alert(t('Không thể cập nhật badge nhà cung cấp', 'Unable to update supplier badge'));
       });
   };
 
@@ -995,7 +1061,12 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] update buyer stage failed', error);
-        alert('Không thể cập nhật trạng thái buyer lead');
+        alert(
+          t(
+            'Không thể cập nhật trạng thái buyer lead',
+            'Unable to update buyer lead status',
+          ),
+        );
       });
   };
 
@@ -1013,7 +1084,12 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] update investor status failed', error);
-        alert('Không thể cập nhật trạng thái nhà đầu tư');
+        alert(
+          t(
+            'Không thể cập nhật trạng thái nhà đầu tư',
+            'Unable to update investor status',
+          ),
+        );
       });
   };
 
@@ -1031,7 +1107,7 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] update investor owner failed', error);
-        alert('Không thể cập nhật owner');
+        alert(t('Không thể cập nhật owner', 'Unable to update owner'));
       });
   };
 
@@ -1064,7 +1140,7 @@ export default function AdminDashboard() {
       if (!res.ok) {
         const errorPayload = await res.json().catch(() => ({}));
         console.error('[AdminDashboard] save IZ layout failed', { status: res.status, errorPayload });
-        alert('Không thể lưu layout KCN, vui lòng thử lại.');
+        alert(t('Không thể lưu layout KCN, vui lòng thử lại.', 'Unable to save IZ layout, please try again.'));
         return;
       }
 
@@ -1077,7 +1153,7 @@ export default function AdminDashboard() {
       setActiveIZ(null);
     } catch (error) {
       console.error('[AdminDashboard] save IZ layout failed', error);
-      alert('Không thể lưu layout KCN, vui lòng thử lại.');
+      alert(t('Không thể lưu layout KCN, vui lòng thử lại.', 'Unable to save IZ layout, please try again.'));
     }
   };
 
@@ -1098,7 +1174,7 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] update content status failed', error);
-        alert('Không thể cập nhật nội dung');
+      alert(t('Không thể cập nhật nội dung', 'Unable to update content item'));
       });
   };
 
@@ -1120,7 +1196,7 @@ export default function AdminDashboard() {
       })
       .catch((error) => {
         console.error('[AdminDashboard] schedule content failed', error);
-        alert('Không thể cập nhật lịch nội dung');
+      alert(t('Không thể cập nhật lịch nội dung', 'Unable to update content schedule'));
       });
   };
 
@@ -1200,10 +1276,10 @@ export default function AdminDashboard() {
       }
       resetNewIZForm();
       setShowIZModal(false);
-      alert('Đã ghi nhận đăng ký KCN mới, chờ xác minh.');
+      alert(t('Đã ghi nhận đăng ký KCN mới, chờ xác minh.', 'New IZ registration submitted for review.'));
     } catch (error) {
       console.error('[AdminDashboard] create IZ failed', error);
-      alert('Không thể tạo KCN mới, vui lòng thử lại.');
+      alert(t('Không thể tạo KCN mới, vui lòng thử lại.', 'Unable to create new IZ, please try again.'));
     } finally {
       setCreatingIZ(false);
     }
@@ -1237,20 +1313,34 @@ export default function AdminDashboard() {
   };
 
   const dashboardTrends = useMemo(() => {
+    const highlightTranslations: Record<string, { vi: string; en: string }> = {
+      'Leads mới tuần này': { vi: 'Leads mới tuần này', en: 'New leads this week' },
+      'RFQ đang mở': { vi: 'RFQ đang mở', en: 'Open RFQs' },
+      'Cuộc gọi tư vấn đã đặt': { vi: 'Cuộc gọi tư vấn đã đặt', en: 'Consultation calls booked' },
+    };
+
+    const baseHighlights = mockReportHighlights.map((item) => ({
+      title: language === 'vi'
+        ? highlightTranslations[item.title]?.vi ?? item.title
+        : highlightTranslations[item.title]?.en ?? item.title,
+      value: item.value,
+      change: item.change,
+    }));
+
     return [
-      ...mockReportHighlights,
+      ...baseHighlights,
       {
-        title: 'Tổng lượt xem sản phẩm',
-        value: analyticsSnapshot.totalProductViews.toLocaleString('vi-VN'),
-        change: `Phản hồi TB: ${analyticsSnapshot.avgResponseRate}%`,
+        title: t('Tổng lượt xem sản phẩm', 'Total product views'),
+        value: analyticsSnapshot.totalProductViews.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US'),
+        change: t(`Phản hồi TB: ${analyticsSnapshot.avgResponseRate}%`, `Avg response: ${analyticsSnapshot.avgResponseRate}%`),
       },
       {
-        title: 'Nội dung đã lên lịch',
+        title: t('Nội dung đã lên lịch', 'Scheduled content'),
         value: analyticsSnapshot.scheduledContent.toString(),
-        change: 'Content queue',
+        change: t('Content queue', 'Content queue'),
       },
     ];
-  }, [analyticsSnapshot]);
+  }, [analyticsSnapshot, language, t]);
 
   if (loading) {
     return (
@@ -1269,31 +1359,37 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center space-x-2 mb-2">
-            <Shield className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">
-              Admin Dashboard
-            </h1>
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
+            <div className="flex items-center space-x-2">
+              <Shield className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900">
+                {t('Bảng điều khiển quản trị', 'Admin Dashboard')}
+              </h1>
+            </div>
+            <LanguageSwitcher />
           </div>
           <p className="text-gray-600">
-            Quản trị và thống kê hệ thống Vietnam Industrial Supply Chain
+            {t(
+              'Quản trị và thống kê hệ thống Vietnam Industrial Supply Chain',
+              'Monitor and manage the Vietnam Industrial Supply Chain platform.',
+            )}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/admin/connections"
-              className="inline-flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600 hover:border-blue-400 hover:text-blue-700"
-            >
-              <Link2 className="w-4 h-4" />
-              <span>Inbox kết nối</span>
-            </Link>
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center space-x-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              <Package className="w-4 h-4" />
-              <span>Xem Marketplace</span>
-            </Link>
-          </div>
+                <Link
+                  href="/admin/connections"
+                  className="inline-flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600 hover:border-blue-400 hover:text-blue-700"
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span>{t('Inbox kết nối', 'Connections inbox')}</span>
+                </Link>
+                <Link
+                  href="/marketplace"
+                  className="inline-flex items-center space-x-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>{t('Xem Marketplace', 'View Marketplace')}</span>
+                </Link>
+              </div>
         </div>
 
         {/* Tabs */}
@@ -1307,7 +1403,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Khu Công nghiệp ({stats.total})
+              {t('Khu công nghiệp', 'Industrial zones')} ({stats.total})
             </button>
             <button
               onClick={() => setActiveTab('factory')}
@@ -1317,7 +1413,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Nhà máy ({stats.totalFactories})
+              {t('Nhà máy', 'Factories')} ({stats.totalFactories})
             </button>
             <button
               onClick={() => setActiveTab('products')}
@@ -1327,7 +1423,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Sản phẩm ({stats.totalProducts})
+              {t('Sản phẩm', 'Products')} ({stats.totalProducts})
             </button>
             <button
               onClick={() => setActiveTab('services')}
@@ -1337,7 +1433,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Dịch vụ ({stats.totalServices})
+              {t('Dịch vụ', 'Services')} ({stats.totalServices})
             </button>
             <button
               onClick={() => setActiveTab('supplier')}
@@ -1347,7 +1443,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Nhà cung cấp ({supplierStatsSnapshot.total})
+              {t('Nhà cung cấp', 'Suppliers')} ({supplierStatsSnapshot.total})
             </button>
             <button
               onClick={() => setActiveTab('buyer')}
@@ -1357,7 +1453,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Buyer Leads ({buyerLeads.length})
+              {t('Buyer Leads', 'Buyer leads')} ({buyerLeads.length})
             </button>
             <button
               onClick={() => setActiveTab('investor')}
@@ -1367,7 +1463,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Nhà đầu tư ({investorDeals.length})
+              {t('Nhà đầu tư', 'Investors')} ({investorDeals.length})
             </button>
             <button
               onClick={() => setActiveTab('users')}
@@ -1377,7 +1473,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Người dùng ({userAccounts.length})
+              {t('Người dùng', 'Users')} ({userAccounts.length})
             </button>
             <button
               onClick={() => setActiveTab('content')}
@@ -1387,7 +1483,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Nội dung ({contentQueue.length})
+              {t('Nội dung', 'Content')} ({contentQueue.length})
             </button>
             <button
               onClick={() => setActiveTab('reports')}
@@ -1397,7 +1493,7 @@ export default function AdminDashboard() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Reports
+              {t('Báo cáo', 'Reports')}
             </button>
           </div>
         </div>
@@ -1407,7 +1503,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Tổng KCN</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Tổng KCN', 'Total IZs')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <Building2 className="w-8 h-8 text-blue-600" />
@@ -1416,7 +1512,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đã xác thực</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Đã xác thực', 'Verified')}</p>
                 <p className="text-2xl font-bold text-green-600">{stats.verified}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -1425,7 +1521,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Chờ xác thực</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Chờ xác thực', 'Pending verification')}</p>
                 <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-600" />
@@ -1434,7 +1530,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đã từ chối</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Đã từ chối', 'Rejected')}</p>
                 <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
               </div>
               <X className="w-8 h-8 text-red-600" />
@@ -1446,7 +1542,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Nhà cung cấp</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Nhà cung cấp', 'Suppliers')}</p>
                 <p className="text-2xl font-bold text-gray-900">{supplierStatsSnapshot.total}</p>
               </div>
               <Users className="w-8 h-8 text-purple-600" />
@@ -1455,7 +1551,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Đối tác chiến lược</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Đối tác chiến lược', 'Strategic partners')}</p>
                 <p className="text-2xl font-bold text-purple-600">{supplierStatsSnapshot.strategic}</p>
               </div>
               <Briefcase className="w-8 h-8 text-purple-600" />
@@ -1464,7 +1560,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Sản phẩm chờ duyệt</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Sản phẩm chờ duyệt', 'Products pending review')}</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.pendingProducts}</p>
               </div>
               <BarChart3 className="w-8 h-8 text-blue-600" />
@@ -1473,7 +1569,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Nội dung chờ duyệt</p>
+                <p className="text-sm text-gray-600 mb-1">{t('Nội dung chờ duyệt', 'Content pending')}</p>
                 <p className="text-2xl font-bold text-amber-600">{contentStats.pending}</p>
               </div>
               <FileText className="w-8 h-8 text-amber-600" />
@@ -1494,7 +1590,7 @@ export default function AdminDashboard() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Tất cả ({stats.total})
+                {t('Tất cả', 'All')} ({stats.total})
               </button>
               <button
                 onClick={() => setFilter('pending')}
@@ -1504,7 +1600,7 @@ export default function AdminDashboard() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Chờ xác thực ({stats.pending})
+                {t('Chờ xác thực', 'Pending')} ({stats.pending})
               </button>
               <button
                 onClick={() => setFilter('verified')}
@@ -1514,14 +1610,14 @@ export default function AdminDashboard() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                Đã xác thực ({stats.verified})
+                {t('Đã xác thực', 'Verified')} ({stats.verified})
               </button>
               <div className="ml-auto flex items-center">
                 <button
                   onClick={() => setShowIZModal(true)}
                   className="inline-flex items-center space-x-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 >
-                  <span>Đăng ký KCN mới</span>
+                  <span>{t('Đăng ký KCN mới', 'Register new IZ')}</span>
                 </button>
               </div>
             </div>
@@ -1540,13 +1636,13 @@ export default function AdminDashboard() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tên KCN
+                        {t('Tên KCN', 'Industrial zone')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tỉnh/Thành
+                        {t('Tỉnh/Thành', 'Province')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Trạng thái
+                        {t('Trạng thái', 'Status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         ESG
@@ -1555,10 +1651,10 @@ export default function AdminDashboard() {
                         DX
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Layout
+                        {t('Layout', 'Layout')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thao tác
+                        {t('Thao tác', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -1577,19 +1673,19 @@ export default function AdminDashboard() {
                           {iz.verificationStatus === 'verified' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               <CheckCircle className="w-3 h-3 mr-1" />
-                              Đã xác thực
+                              {t('Đã xác thực', 'Verified')}
                             </span>
                           )}
                           {iz.verificationStatus === 'pending' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                               <Clock className="w-3 h-3 mr-1" />
-                              Chờ xác thực
+                              {t('Chờ xác thực', 'Pending')}
                             </span>
                           )}
                           {iz.verificationStatus === 'rejected' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                               <X className="w-3 h-3 mr-1" />
-                              Đã từ chối
+                              {t('Đã từ chối', 'Rejected')}
                             </span>
                           )}
                         </td>
@@ -1625,13 +1721,13 @@ export default function AdminDashboard() {
                                 onClick={() => window.open(iz.layoutMapUrl, '_blank')}
                                 className="text-blue-600 hover:text-blue-800 text-xs"
                               >
-                                Xem layout
+                                {t('Xem layout', 'View layout')}
                               </button>
                               <button
                                 onClick={() => handleOpenIZLayoutModal(iz)}
                                 className="text-gray-600 hover:text-gray-800 text-xs"
                               >
-                                Cập nhật
+                                {t('Cập nhật', 'Update')}
                               </button>
                             </div>
                           ) : (
@@ -1639,7 +1735,7 @@ export default function AdminDashboard() {
                               onClick={() => handleOpenIZLayoutModal(iz)}
                               className="text-blue-600 hover:text-blue-800 text-xs"
                             >
-                              Thêm layout
+                              {t('Thêm layout', 'Add layout')}
                             </button>
                           )}
                         </td>
@@ -1651,14 +1747,14 @@ export default function AdminDashboard() {
                                 className="text-green-600 hover:text-green-900 flex items-center space-x-1"
                               >
                                 <CheckCircle className="w-4 h-4" />
-                                <span>Duyệt</span>
+                                  <span>{t('Duyệt', 'Approve')}</span>
                               </button>
                               <button
                                 onClick={() => handleVerify(iz.id, 'rejected')}
                                 className="text-red-600 hover:text-red-900 flex items-center space-x-1"
                               >
                                 <X className="w-4 h-4" />
-                                <span>Từ chối</span>
+                                  <span>{t('Từ chối', 'Reject')}</span>
                               </button>
                             </div>
                           )}
@@ -1666,7 +1762,7 @@ export default function AdminDashboard() {
                             href={`/iz/${iz.id}`}
                             className="text-blue-600 hover:text-blue-900"
                           >
-                            Xem chi tiết
+                              {t('Xem chi tiết', 'View details')}
                           </a>
                         </td>
                       </tr>
@@ -1685,7 +1781,7 @@ export default function AdminDashboard() {
                 <Filter className="w-5 h-5 text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm nhà máy..."
+                  placeholder={t('Tìm kiếm nhà máy...', 'Search factories...')}
                   value={factorySearch}
                   onChange={(e) => setFactorySearch(e.target.value)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
@@ -1695,17 +1791,17 @@ export default function AdminDashboard() {
                   onChange={(e) => setFactoryStatusFilter(e.target.value as typeof factoryStatusFilter)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="verified">Đã xác thực</option>
-                  <option value="pending">Chờ xác thực</option>
-                  <option value="rejected">Đã từ chối</option>
+                  <option value="all">{t('Tất cả trạng thái', 'All statuses')}</option>
+                  <option value="verified">{t('Đã xác thực', 'Verified')}</option>
+                  <option value="pending">{t('Chờ xác thực', 'Pending')}</option>
+                  <option value="rejected">{t('Đã từ chối', 'Rejected')}</option>
                 </select>
                 <select
                   value={factoryIndustryFilter}
                   onChange={(e) => setFactoryIndustryFilter(e.target.value)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="all">Tất cả ngành</option>
+                  <option value="all">{t('Tất cả ngành', 'All industries')}</option>
                   {factoryIndustries.map((industry) => (
                     <option key={industry} value={industry}>
                       {industry}
@@ -1717,7 +1813,7 @@ export default function AdminDashboard() {
                   onChange={(e) => setFactoryIZFilter(e.target.value)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="all">Tất cả KCN</option>
+                  <option value="all">{t('Tất cả KCN', 'All IZs')}</option>
                   {izs.map((iz) => (
                     <option key={iz.id} value={iz.id}>
                       {iz.name}
@@ -1729,9 +1825,11 @@ export default function AdminDashboard() {
 
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Danh sách Nhà máy</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {t('Danh sách Nhà máy', 'Factory directory')}
+                </h2>
                 <span className="text-sm text-gray-500">
-                  Hiển thị {filteredFactories.length}/{factories.length}
+                  {t('Hiển thị', 'Showing')} {filteredFactories.length}/{factories.length}
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -1739,13 +1837,13 @@ export default function AdminDashboard() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Tên nhà máy
+                        {t('Tên nhà máy', 'Factory')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        KCN
+                        {t('KCN', 'IZ')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Trạng thái
+                        {t('Trạng thái', 'Status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         ESG
@@ -1754,7 +1852,7 @@ export default function AdminDashboard() {
                         DX
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thao tác
+                        {t('Thao tác', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -1782,19 +1880,19 @@ export default function AdminDashboard() {
                           {factory.verificationStatus === 'verified' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               <CheckCircle className="w-3 h-3 mr-1" />
-                              Đã xác thực
+                              {t('Đã xác thực', 'Verified')}
                             </span>
                           )}
                           {factory.verificationStatus === 'pending' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                               <Clock className="w-3 h-3 mr-1" />
-                              Chờ xác thực
+                              {t('Chờ xác thực', 'Pending')}
                             </span>
                           )}
                           {factory.verificationStatus === 'rejected' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                               <X className="w-3 h-3 mr-1" />
-                              Đã từ chối
+                              {t('Đã từ chối', 'Rejected')}
                             </span>
                           )}
                         </td>
@@ -1820,7 +1918,9 @@ export default function AdminDashboard() {
                                 : 'bg-gray-100 text-gray-500 hover:text-gray-700'
                             }`}
                           >
-                            {factory.digitalTransformation ? 'Enabled' : 'Disabled'}
+                            {factory.digitalTransformation
+                              ? t('Đang bật', 'Enabled')
+                              : t('Chưa bật', 'Disabled')}
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-1">
@@ -1831,14 +1931,14 @@ export default function AdminDashboard() {
                                 className="text-green-600 hover:text-green-900 flex items-center space-x-1"
                               >
                                 <CheckCircle className="w-4 h-4" />
-                                <span>Duyệt</span>
+                                <span>{t('Duyệt', 'Approve')}</span>
                               </button>
                               <button
                                 onClick={() => handleVerifyFactory(factory.id, 'rejected')}
                                 className="text-red-600 hover:text-red-900 flex items-center space-x-1"
                               >
                                 <X className="w-4 h-4" />
-                                <span>Từ chối</span>
+                                <span>{t('Từ chối', 'Reject')}</span>
                               </button>
                             </div>
                           )}
@@ -1859,7 +1959,7 @@ export default function AdminDashboard() {
                             }}
                             className="block text-blue-600 hover:text-blue-900"
                           >
-                            Chỉnh sửa
+                            {t('Chỉnh sửa', 'Edit')}
                           </button>
                         </td>
                       </tr>
@@ -1878,7 +1978,7 @@ export default function AdminDashboard() {
                 <Filter className="w-5 h-5 text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm sản phẩm..."
+                  placeholder={t('Tìm kiếm sản phẩm...', 'Search products...')}
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
@@ -1888,19 +1988,19 @@ export default function AdminDashboard() {
                   onChange={(e) => setProductStatusFilter(e.target.value as typeof productStatusFilter)}
                   className="rounded border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="verified">Đã xác thực</option>
-                  <option value="pending">Chờ duyệt</option>
-                  <option value="rejected">Đã từ chối</option>
+                  <option value="all">{t('Tất cả trạng thái', 'All statuses')}</option>
+                  <option value="verified">{t('Đã xác thực', 'Verified')}</option>
+                  <option value="pending">{t('Chờ duyệt', 'Pending')}</option>
+                  <option value="rejected">{t('Đã từ chối', 'Rejected')}</option>
                 </select>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Danh sách Sản phẩm</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('Danh sách Sản phẩm', 'Product catalogue')}</h2>
                 <span className="text-sm text-gray-500">
-                  Hiển thị {filteredProducts.length}/{products.length}
+                  {t('Hiển thị', 'Showing')} {filteredProducts.length}/{products.length}
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -1908,22 +2008,22 @@ export default function AdminDashboard() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sản phẩm
+                        {t('Sản phẩm', 'Product')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nhà cung cấp
+                        {t('Nhà cung cấp', 'Supplier')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Giá
+                        {t('Giá', 'Price')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Hiệu suất
+                        {t('Hiệu suất', 'Performance')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Trạng thái
+                        {t('Trạng thái', 'Status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thao tác
+                        {t('Thao tác', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -1940,34 +2040,34 @@ export default function AdminDashboard() {
                             '—'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {product.price.toLocaleString('vi-VN')} VND / {product.unit}
+                          {product.price.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')} VND / {product.unit}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <div className="space-y-1 text-xs text-gray-600">
-                            <div>Lượt xem: {product.viewCount ?? 0}</div>
+                            <div>{t('Lượt xem', 'Views')}: {product.viewCount ?? 0}</div>
                             <div>
-                              Tỉ lệ phản hồi: {product.responseRate != null ? Math.round(product.responseRate * 100) : 0}%
+                              {t('Tỉ lệ phản hồi', 'Response rate')}: {product.responseRate != null ? Math.round(product.responseRate * 100) : 0}%
                             </div>
-                            <div>Leads: {product.leadCount ?? 0}</div>
+                            <div>{t('Leads', 'Leads')}: {product.leadCount ?? 0}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {product.verificationStatus === 'verified' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               <CheckCircle className="w-3 h-3 mr-1" />
-                              Đã xác thực
+                              {t('Đã xác thực', 'Verified')}
                             </span>
                           )}
                           {product.verificationStatus === 'pending' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                               <Clock className="w-3 h-3 mr-1" />
-                              Chờ duyệt
+                              {t('Chờ duyệt', 'Pending')}
                             </span>
                           )}
                           {product.verificationStatus === 'rejected' && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                               <X className="w-3 h-3 mr-1" />
-                              Đã từ chối
+                              {t('Đã từ chối', 'Rejected')}
                             </span>
                           )}
                         </td>
@@ -1976,13 +2076,13 @@ export default function AdminDashboard() {
                             onClick={() => handleVerifyProduct(product.id, 'verified')}
                             className="text-green-600 hover:text-green-900"
                           >
-                            Duyệt
+                            {t('Duyệt', 'Approve')}
                           </button>
                           <button
                             onClick={() => handleVerifyProduct(product.id, 'rejected')}
                             className="text-red-600 hover:text-red-900"
                           >
-                            Từ chối
+                            {t('Từ chối', 'Reject')}
                           </button>
                           <button
                             onClick={() => {
@@ -2002,7 +2102,7 @@ export default function AdminDashboard() {
                             }}
                             className="text-blue-600 hover:text-blue-800"
                           >
-                            Chỉnh sửa
+                            {t('Chỉnh sửa', 'Edit')}
                           </button>
                         </td>
                       </tr>
@@ -2027,7 +2127,7 @@ export default function AdminDashboard() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Tất cả ({stats.totalServices})
+                  {t('Tất cả', 'All')} ({stats.totalServices})
                 </button>
                 <button
                   onClick={() => setFilter('pending')}
@@ -2037,7 +2137,7 @@ export default function AdminDashboard() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Chờ duyệt ({stats.pendingServices})
+                  {t('Chờ duyệt', 'Pending')} ({stats.pendingServices})
                 </button>
                 <button
                   onClick={() => setFilter('verified')}
@@ -2047,36 +2147,38 @@ export default function AdminDashboard() {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Đã duyệt ({stats.totalServices - stats.pendingServices})
+                  {t('Đã duyệt', 'Approved')} ({stats.totalServices - stats.pendingServices})
                 </button>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">Danh sách dịch vụ công nghiệp</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {t('Danh sách dịch vụ công nghiệp', 'Industrial services directory')}
+                </h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Dịch vụ
+                        {t('Dịch vụ', 'Service')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Loại hình
+                        {t('Loại hình', 'Category')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        KCN đang áp dụng
+                        {t('KCN đang áp dụng', 'Linked IZs')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Chỉ số
+                        {t('Chỉ số', 'Metrics')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Trạng thái
+                        {t('Trạng thái', 'Status')}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thao tác
+                        {t('Thao tác', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -2110,19 +2212,19 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <div className="flex flex-col gap-1">
-                            <span>Phản hồi: {service.responseTimeHours ?? 0}h</span>
-                            <span>Hợp đồng đã ký: {service.contractsSigned ?? 0}</span>
-                            <span>Đánh giá TB: {service.averageEvaluation ?? 0}/5</span>
+                            <span>{t('Phản hồi', 'Response time')}: {service.responseTimeHours ?? 0}h</span>
+                            <span>{t('Hợp đồng đã ký', 'Contracts signed')}: {service.contractsSigned ?? 0}</span>
+                            <span>{t('Đánh giá TB', 'Average rating')}: {service.averageEvaluation ?? 0}/5</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {service.verificationStatus === 'verified' ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3 mr-1" /> Đã duyệt
+                              <CheckCircle className="w-3 h-3 mr-1" /> {t('Đã duyệt', 'Approved')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              <Clock className="w-3 h-3 mr-1" /> Chờ duyệt
+                              <Clock className="w-3 h-3 mr-1" /> {t('Chờ duyệt', 'Pending')}
                             </span>
                           )}
                         </td>
@@ -2134,14 +2236,14 @@ export default function AdminDashboard() {
                                 className="text-green-600 hover:text-green-900 flex items-center space-x-1"
                               >
                                 <CheckCircle className="w-4 h-4" />
-                                <span>Duyệt</span>
+                                <span>{t('Duyệt', 'Approve')}</span>
                               </button>
                               <button
                                 onClick={() => handleVerifyService(service.id, 'rejected')}
                                 className="text-red-600 hover:text-red-900 flex items-center space-x-1"
                               >
                                 <X className="w-4 h-4" />
-                                <span>Từ chối</span>
+                                <span>{t('Từ chối', 'Reject')}</span>
                               </button>
                             </div>
                           )}
@@ -2154,11 +2256,11 @@ export default function AdminDashboard() {
                                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                               }`}
                             >
-                              {service.isStrategicPartner ? 'Bỏ badge' : 'Gắn badge'}
+                              {service.isStrategicPartner ? t('Bỏ badge', 'Remove badge') : t('Gắn badge', 'Add badge')}
                             </button>
                           )}
                           <a href={`/services`} className="text-blue-600 hover:text-blue-900">
-                            Xem chi tiết
+                            {t('Xem chi tiết', 'View details')}
                           </a>
                         </td>
                       </tr>
@@ -2173,9 +2275,14 @@ export default function AdminDashboard() {
         {activeTab === 'supplier' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Quản lý Nhà cung cấp</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                {t('Quản lý Nhà cung cấp', 'Supplier management')}
+              </h2>
               <p className="text-sm text-gray-500 mt-1">
-                Theo dõi trạng thái xác thực, chứng nhận ESG/DX và gắn badge chiến lược cho đối tác trọng điểm.
+                {t(
+                  'Theo dõi trạng thái xác thực, chứng nhận ESG/DX và gắn badge chiến lược cho đối tác trọng điểm.',
+                  'Track verification status, ESG/DX certifications and assign strategic badges.',
+                )}
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -2183,25 +2290,25 @@ export default function AdminDashboard() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nhà cung cấp
+                      {t('Nhà cung cấp', 'Supplier')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ngành chính
+                      {t('Ngành chính', 'Industries')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Chứng nhận
+                      {t('Chứng nhận', 'Certifications')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hiệu suất
+                      {t('Hiệu suất', 'Performance')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Trạng thái
+                      {t('Trạng thái', 'Status')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Liên hệ
+                      {t('Liên hệ', 'Contact')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Thao tác
+                      {t('Thao tác', 'Actions')}
                     </th>
                   </tr>
                 </thead>
@@ -2211,12 +2318,17 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">{supplier.companyName}</div>
                         <div className="text-xs text-gray-500">
-                          Sản phẩm nổi bật: {supplier.products.slice(0, 2).join(', ') || '—'}
+                          {t('Sản phẩm nổi bật', 'Key products')}: {supplier.products.slice(0, 2).join(', ') || '—'}
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                          <span>Đánh giá: {(supplier.rating ?? 0).toFixed(1)} ⭐</span>
-                          <span>Phản hồi: {Math.round((supplier.responseRate ?? 0) * 100)}%</span>
-                          <span>Lần hoạt động gần nhất: {supplier.lastActiveAt ? new Date(supplier.lastActiveAt).toLocaleDateString('vi-VN') : '—'}</span>
+                          <span>{t('Đánh giá', 'Rating')}: {(supplier.rating ?? 0).toFixed(1)} ⭐</span>
+                          <span>{t('Tỉ lệ phản hồi', 'Response rate')}: {Math.round((supplier.responseRate ?? 0) * 100)}%</span>
+                          <span>
+                            {t('Hoạt động gần nhất', 'Last active')}:{' '}
+                            {supplier.lastActiveAt
+                              ? new Date(supplier.lastActiveAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')
+                              : '—'}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -2244,52 +2356,58 @@ export default function AdminDashboard() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400">Chưa cập nhật</span>
+                          <span className="text-xs text-gray-400">{t('Chưa cập nhật', 'Not provided')}</span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <div className="flex flex-col gap-1">
-                          <span>Thời gian phản hồi: {supplier.responseTimeHours ?? 0}h</span>
-                          <span>Tỉ lệ giao đúng hạn: {supplier.onTimeDeliveryRate ?? 0}%</span>
-                          <span>Ngôn ngữ: {(supplier.languages || []).join(', ') || '—'}</span>
+                          <span>{t('Thời gian phản hồi', 'Response time')}: {supplier.responseTimeHours ?? 0}h</span>
+                          <span>{t('Tỉ lệ giao đúng hạn', 'On-time delivery')}: {supplier.onTimeDeliveryRate ?? 0}%</span>
+                          <span>{t('Ngôn ngữ', 'Languages')}: {(supplier.languages || []).join(', ') || '—'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {supplier.verificationStatus === 'verified' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <CheckCircle className="w-3 h-3 mr-1" /> Đã xác thực
+                            <CheckCircle className="w-3 h-3 mr-1" /> {t('Đã xác thực', 'Verified')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Clock className="w-3 h-3 mr-1" /> Chờ duyệt
+                            <Clock className="w-3 h-3 mr-1" /> {t('Chờ duyệt', 'Pending')}
                           </span>
                         )}
                         {supplier.isStrategicPartner && (
                           <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                            ⭐ Strategic Partner
+                            ⭐ {t('Đối tác chiến lược', 'Strategic Partner')}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         <div>{supplier.contactEmail}</div>
                         <div>{supplier.contactPhone}</div>
-                        <div className="text-xs text-gray-400">Trụ sở: {supplier.headquarters || '—'}</div>
+                        <div className="text-xs text-gray-400">
+                          {t('Trụ sở', 'Headquarters')}: {supplier.headquarters || '—'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-1">
                         <button
                           onClick={() => handleUpdateSupplierStatus(supplier.id, supplier.verificationStatus === 'verified' ? 'pending' : 'verified')}
                           className="block text-blue-600 hover:text-blue-900"
                         >
-                          {supplier.verificationStatus === 'verified' ? 'Chuyển về pending' : 'Duyệt hồ sơ'}
+                          {supplier.verificationStatus === 'verified'
+                            ? t('Chuyển về chờ duyệt', 'Move to pending')
+                            : t('Duyệt hồ sơ', 'Approve profile')}
                         </button>
                         <button
                           onClick={() => handleToggleSupplierStrategic(supplier.id)}
                           className="block text-purple-600 hover:text-purple-800"
                         >
-                          {supplier.isStrategicPartner ? 'Bỏ badge' : 'Gắn badge đối tác'}
+                          {supplier.isStrategicPartner
+                            ? t('Bỏ badge đối tác', 'Remove partner badge')
+                            : t('Gắn badge đối tác', 'Add partner badge')}
                         </button>
                         <a href={`/supplier/${supplier.id}`} className="block text-gray-600 hover:text-gray-800 text-sm">
-                          Xem hồ sơ →
+                          {t('Xem hồ sơ →', 'View profile →')}
                         </a>
                       </td>
                     </tr>
@@ -2302,14 +2420,18 @@ export default function AdminDashboard() {
 
         {activeTab === 'buyer' && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Pipeline Buyer Leads</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              {t('Pipeline Buyer Leads', 'Buyer leads pipeline')}
+            </h2>
             <div className="grid gap-4 lg:grid-cols-2">
               {buyerLeads.map((lead) => (
                 <div key={lead.id} className="rounded-lg border border-gray-100 p-4 hover:border-blue-200 hover:shadow transition">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-base font-semibold text-gray-900">{lead.company}</h3>
-                      <p className="text-xs text-gray-500">Ngành quan tâm: {lead.industries.join(', ')}</p>
+                      <p className="text-xs text-gray-500">
+                        {t('Ngành quan tâm', 'Interested industries')}: {lead.industries.join(', ')}
+                      </p>
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-medium ${
@@ -2324,15 +2446,20 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
-                    <span>Cơ hội mở: <strong>{lead.opportunities}</strong></span>
-                    <span>Lần liên hệ cuối: {new Date(lead.lastContact).toLocaleString('vi-VN')}</span>
+                    <span>
+                      {t('Cơ hội mở', 'Open opportunities')}: <strong>{lead.opportunities}</strong>
+                    </span>
+                    <span>
+                      {t('Liên hệ gần nhất', 'Last contact')}:{' '}
+                      {new Date(lead.lastContact).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}
+                    </span>
                   </div>
                   <div className="mt-1 text-xs text-gray-500">
-                    Giá trị pipeline: {(lead.value / 1_000_000).toFixed(1)}M USD
+                    {t('Giá trị pipeline', 'Pipeline value')}: {(lead.value / 1_000_000).toFixed(1)}M USD
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-gray-500">Cập nhật trạng thái:</span>
+                      <span className="text-gray-500">{t('Cập nhật trạng thái:', 'Update stage:')}</span>
                       {(['Đang quan tâm', 'Đàm phán', 'Đã ký'] as const).map((stage) => (
                         <button
                           key={stage}
@@ -2347,7 +2474,9 @@ export default function AdminDashboard() {
                         </button>
                       ))}
                     </div>
-                    <button className="text-sm text-blue-600 hover:text-blue-700">Xem chi tiết lead →</button>
+                    <button className="text-sm text-blue-600 hover:text-blue-700">
+                      {t('Xem chi tiết lead →', 'View lead details →')}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -2358,7 +2487,9 @@ export default function AdminDashboard() {
         {activeTab === 'investor' && (
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Pipeline Nhà đầu tư</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                {t('Pipeline Nhà đầu tư', 'Investor pipeline')}
+              </h2>
               <div className="space-y-4">
                 {investorDeals.map((deal) => (
                   <div
@@ -2368,13 +2499,15 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-base font-semibold text-gray-900">{deal.fundName}</h3>
-                        <p className="text-xs text-gray-500">Focus: {deal.focus.join(', ')}</p>
+                        <p className="text-xs text-gray-500">
+                          {t('Trọng tâm', 'Focus')}: {deal.focus.join(', ')}
+                        </p>
                       </div>
                       <span className="text-sm font-semibold text-emerald-600">{deal.budget}</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500 uppercase">Owner</span>
+                        <span className="text-xs text-gray-500 uppercase">{t('Owner', 'Owner')}</span>
                         <input
                           value={deal.owner}
                           onChange={(e) => handleInvestorOwnerChange(deal.id, e.target.value)}
@@ -2394,7 +2527,7 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                      <span className="text-gray-500">Cập nhật trạng thái:</span>
+                      <span className="text-gray-500">{t('Cập nhật trạng thái:', 'Update stage:')}</span>
                       {(['Đánh giá', 'Hẹn gặp', 'Ký NDA'] as const).map((status) => (
                         <button
                           key={status}
@@ -2417,15 +2550,27 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Kế hoạch đầu tư gửi từ portal</h2>
-                  <p className="text-sm text-gray-500">Duyệt kế hoạch, gán chuyên viên tư vấn và theo dõi tiến trình.</p>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {t('Kế hoạch đầu tư gửi từ portal', 'Investment plans from portal')}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {t(
+                      'Duyệt kế hoạch, gán chuyên viên tư vấn và theo dõi tiến trình.',
+                      'Review plans, assign advisors, and monitor progress.',
+                    )}
+                  </p>
                 </div>
-                <span className="text-sm text-gray-500">{investmentPlans.length} kế hoạch</span>
+                <span className="text-sm text-gray-500">
+                  {investmentPlans.length} {t('kế hoạch', 'plans')}
+                </span>
               </div>
 
               {investmentPlans.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
-                  Chưa có kế hoạch nào được gửi từ Investment Portal.
+                  {t(
+                    'Chưa có kế hoạch nào được gửi từ Investment Portal.',
+                    'No plans submitted from the Investment Portal yet.',
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -2433,9 +2578,13 @@ export default function AdminDashboard() {
                     <div key={plan.id} className="rounded-lg border border-gray-100 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-base font-semibold text-gray-900">Đề xuất ngân sách {plan.budget.toLocaleString('vi-VN')} VND</h3>
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {t('Đề xuất ngân sách', 'Budget proposal')}{' '}
+                            {plan.budget.toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')} VND
+                          </h3>
                           <p className="text-xs text-gray-500">
-                            Ngành ưu tiên: {plan.preferredIndustries.join(', ') || '—'} | Khu vực: {plan.preferredLocations.join(', ') || '—'}
+                            {t('Ngành ưu tiên', 'Preferred industries')}: {plan.preferredIndustries.join(', ') || '—'} |{' '}
+                            {t('Khu vực', 'Locations')}: {plan.preferredLocations.join(', ') || '—'}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -2456,7 +2605,9 @@ export default function AdminDashboard() {
                       </div>
                       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                         <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Đề xuất KCN</span>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">
+                            {t('Đề xuất KCN', 'Suggested IZs')}
+                          </span>
                           <div className="mt-1">
                             {plan.recommendations.izIds.length > 0
                               ? plan.recommendations.izIds
@@ -2466,11 +2617,15 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Nhà cung cấp gợi ý</span>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">
+                            {t('Nhà cung cấp gợi ý', 'Suggested suppliers')}
+                          </span>
                           <div className="mt-1">
                             {plan.recommendations.supplierIds.length > 0
                               ? plan.recommendations.supplierIds
-                                  .map((supplierId) => suppliers.find((supplier) => supplier.id === supplierId)?.companyName || supplierId)
+                                  .map((supplierId) =>
+                                    suppliers.find((supplier) => supplier.id === supplierId)?.companyName || supplierId,
+                                  )
                                   .join(', ')
                               : '—'}
                           </div>
@@ -2478,7 +2633,7 @@ export default function AdminDashboard() {
                       </div>
                       {plan.recommendations.rationale && (
                         <div className="mt-3 text-xs text-gray-500">
-                          <span className="font-semibold text-gray-600">Ghi chú đề xuất:</span> {plan.recommendations.rationale}
+                          {t('Lý do đề xuất', 'Recommendation rationale')}: {plan.recommendations.rationale}
                         </div>
                       )}
                       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">

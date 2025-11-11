@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Search, Filter, MapPin, Factory as FactoryIcon, Plus, Layers, Network, Building2 } from 'lucide-react';
 import IZCard from '@/components/IZCard';
 import { IndustrialZone, Factory, Cluster, Region, TopologyLevel } from '@/types/database';
 import { mockFactories, mockClusters, mockRegions } from '@/lib/mockData';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Dynamic import để tránh SSR issues với Leaflet
 const TopologyMapComponent = dynamic(() => import('@/components/TopologyMapComponent'), {
@@ -30,6 +31,11 @@ export default function MapPage() {
   const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
   const [showFlowLines, setShowFlowLines] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
+  const t = useCallback(
+    (vi: string, en: string) => (language === 'vi' ? vi : en),
+    [language],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -372,10 +378,13 @@ export default function MapPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Bản đồ Topology Khu Công Nghiệp Việt Nam
+                {t('Bản đồ Topology Khu Công Nghiệp Việt Nam', 'Vietnam Industrial Topology Map')}
               </h1>
               <p className="text-gray-600">
-                Khám phá các khu công nghiệp trên bản đồ topology, tìm kiếm nguồn cung cầu xung quanh
+                {t(
+                  'Khám phá các khu công nghiệp trên bản đồ topology, tìm kiếm nguồn cung - cầu xung quanh.',
+                  'Explore industrial zones on the topology map and discover supply-demand opportunities nearby.',
+                )}
               </p>
             </div>
             <div className="flex space-x-2">
@@ -384,14 +393,14 @@ export default function MapPage() {
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                <span>Đăng ký KCN</span>
+                <span>{t('Đăng ký KCN', 'Register Industrial Zone')}</span>
               </Link>
               <Link
                 href="/factory/register"
                 className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <FactoryIcon className="w-5 h-5" />
-                <span>Đăng ký Nhà máy</span>
+                <span>{t('Đăng ký Nhà máy', 'Register Factory')}</span>
               </Link>
             </div>
           </div>
@@ -402,7 +411,7 @@ export default function MapPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Layers className="w-5 h-5 text-gray-600" />
-              <span className="font-medium text-gray-700">Cấp độ bản đồ:</span>
+              <span className="font-medium text-gray-700">{t('Cấp độ bản đồ:', 'Map level:')}</span>
             </div>
             <div className="flex space-x-2">
               <button
@@ -414,7 +423,7 @@ export default function MapPage() {
                 }`}
               >
                 <MapPin className="w-4 h-4" />
-                <span>Cấp 1: Vùng miền</span>
+                <span>{t('Cấp 1: Vùng miền', 'Level 1: Regions')}</span>
               </button>
               <button
                 onClick={() => handleLevelChange('iz')}
@@ -425,14 +434,14 @@ export default function MapPage() {
                 }`}
               >
                 <Building2 className="w-4 h-4" />
-                <span>Cấp 2: KCN</span>
+                <span>{t('Cấp 2: KCN', 'Level 2: IZ')}</span>
               </button>
               <button
                 onClick={() => {
                   if (selectedIZ) {
                     handleLevelChange('cluster');
                   } else {
-                    alert('Vui lòng chọn một KCN trước');
+                    alert(t('Vui lòng chọn một KCN trước', 'Please select an IZ first'));
                   }
                 }}
                 disabled={!selectedIZ}
@@ -443,14 +452,14 @@ export default function MapPage() {
                 } ${!selectedIZ ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Layers className="w-4 h-4" />
-                <span>Cấp 3: Cụm</span>
+                <span>{t('Cấp 3: Cụm', 'Level 3: Clusters')}</span>
               </button>
               <button
                 onClick={() => {
                   if (selectedFactory) {
                     handleLevelChange('factory');
                   } else {
-                    alert('Vui lòng chọn một nhà máy trước');
+                    alert(t('Vui lòng chọn một nhà máy trước', 'Please select a factory first'));
                   }
                 }}
                 disabled={!selectedFactory}
@@ -461,7 +470,7 @@ export default function MapPage() {
                 } ${!selectedFactory ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <FactoryIcon className="w-4 h-4" />
-                <span>Cấp 4: Nhà máy</span>
+                <span>{t('Cấp 4: Nhà máy', 'Level 4: Factories')}</span>
               </button>
             </div>
           </div>
@@ -475,7 +484,7 @@ export default function MapPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Tìm kiếm khu công nghiệp..."
+                placeholder={t('Tìm kiếm khu công nghiệp...', 'Search industrial zones...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -490,7 +499,7 @@ export default function MapPage() {
                 onChange={(e) => setSelectedProvince(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
-                <option value="all">Tất cả tỉnh/thành</option>
+                <option value="all">{t('Tất cả tỉnh/thành', 'All provinces')}</option>
                 {provinces.map((province) => (
                   <option key={province} value={province}>
                     {province}
@@ -507,9 +516,9 @@ export default function MapPage() {
                 onChange={(e) => setSelectedVerification(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="verified">Đã xác thực</option>
-                <option value="pending">Chờ xác thực</option>
+                <option value="all">{t('Tất cả trạng thái', 'All statuses')}</option>
+                <option value="verified">{t('Đã xác thực', 'Verified')}</option>
+                <option value="pending">{t('Chờ xác thực', 'Pending')}</option>
               </select>
             </div>
 
@@ -521,12 +530,12 @@ export default function MapPage() {
                 onChange={(e) => setSelectedESG(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
-                <option value="all">Tất cả ESG</option>
-                <option value="none">Không có ESG</option>
-                <option value="environmental">Environmental</option>
-                <option value="social">Social</option>
-                <option value="governance">Governance</option>
-                <option value="all">Tất cả ESG</option>
+                <option value="all">{t('Tất cả ESG', 'All ESG')}</option>
+                <option value="none">{t('Không có ESG', 'No ESG')}</option>
+                <option value="environmental">{t('Environmental', 'Environmental')}</option>
+                <option value="social">{t('Social', 'Social')}</option>
+                <option value="governance">{t('Governance', 'Governance')}</option>
+                <option value="all">{t('Tất cả ESG', 'All ESG')}</option>
               </select>
             </div>
 
@@ -538,7 +547,7 @@ export default function MapPage() {
                 onChange={(e) => setSelectedIndustry(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
-                <option value="all">Tất cả ngành</option>
+                <option value="all">{t('Tất cả ngành', 'All industries')}</option>
                 {industries.map((industry) => (
                   <option key={industry} value={industry}>
                     {industry}
@@ -556,7 +565,7 @@ export default function MapPage() {
                   onChange={(e) => setSelectedRegion(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >
-                  <option value="all">Tất cả vùng miền</option>
+                  <option value="all">{t('Tất cả vùng miền', 'All regions')}</option>
                   {regions.map((region) => (
                     <option key={region.id} value={region.id}>
                       {region.name}
@@ -578,7 +587,7 @@ export default function MapPage() {
                 }`}
               >
                 <Network className="w-4 h-4" />
-                <span>{showFlowLines ? 'Ẩn' : 'Hiện'} Tuyến đường</span>
+                <span>{showFlowLines ? t('Ẩn tuyến đường', 'Hide flow lines') : t('Hiện tuyến đường', 'Show flow lines')}</span>
               </button>
             </div>
           </div>
@@ -654,25 +663,30 @@ export default function MapPage() {
           <div className="space-y-4" style={{ maxHeight: '600px', overflowY: 'auto' }}>
             <div className="text-sm text-gray-600 mb-2 flex items-center justify-between">
               <span>
-                Tìm thấy {filteredIZs.length} khu công nghiệp
+                {t('Tìm thấy', 'Found')} {filteredIZs.length}{' '}
+                {t('khu công nghiệp', 'industrial zones')}
                 {topologyLevel === 'cluster' || topologyLevel === 'factory'
-                  ? `, ${filteredFactories.filter((factory) => !selectedIZ || factory.izId === selectedIZ).length} nhà máy`
+                  ? t(
+                      `, ${filteredFactories.filter((factory) => !selectedIZ || factory.izId === selectedIZ).length} nhà máy`,
+                      `, ${filteredFactories.filter((factory) => !selectedIZ || factory.izId === selectedIZ).length} factories`,
+                    )
                   : ''}
-                {topologyLevel === 'region' && ` (${regions.length} vùng miền)`}
+                {topologyLevel === 'region' &&
+                  t(` (${regions.length} vùng miền)`, ` (${regions.length} regions)`)}
               </span>
               <div className="flex items-center space-x-2 text-xs">
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span>Đã xác thực</span>
+                  <span>{t('Đã xác thực', 'Verified')}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span>Chờ xác thực</span>
+                  <span>{t('Chờ xác thực', 'Pending')}</span>
                 </div>
                 {(topologyLevel === 'factory' || topologyLevel === 'cluster') && (
                   <div className="flex items-center space-x-1">
                     <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                    <span>Nhà máy</span>
+                    <span>{t('Nhà máy', 'Factories')}</span>
                   </div>
                 )}
               </div>
@@ -686,12 +700,12 @@ export default function MapPage() {
                     selectedIZ === iz.id ? 'ring-2 ring-blue-500' : ''
                   }`}
                 >
-                  <IZCard iz={iz} />
+                  <IZCard iz={iz} language={language} />
                 </div>
               ))
             ) : (
               <div className="bg-white rounded-lg shadow-md p-8 text-center text-gray-500">
-                Không tìm thấy khu công nghiệp nào
+                {t('Không tìm thấy khu công nghiệp nào', 'No industrial zones found')}
               </div>
             )}
           </div>

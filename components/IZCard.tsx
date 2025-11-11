@@ -6,9 +6,12 @@ import { MapPin, CheckCircle, Leaf, Cpu, Building2, Users, Clock } from 'lucide-
 
 interface IZCardProps {
   iz: IndustrialZone;
+  language?: 'vi' | 'en';
 }
 
-export default function IZCard({ iz }: IZCardProps) {
+export default function IZCard({ iz, language = 'vi' }: IZCardProps) {
+  const t = (vi: string, en: string) => (language === 'vi' ? vi : en);
+
   const getESGColor = (status: string) => {
     switch (status) {
       case 'all':
@@ -27,13 +30,13 @@ export default function IZCard({ iz }: IZCardProps) {
   const getESGLabel = (status: string) => {
     switch (status) {
       case 'all':
-        return 'ESG';
+        return t('ESG', 'ESG');
       case 'environmental':
-        return 'E';
+        return t('E', 'E');
       case 'social':
-        return 'S';
+        return t('S', 'S');
       case 'governance':
-        return 'G';
+        return t('G', 'G');
       default:
         return '';
     }
@@ -51,7 +54,7 @@ export default function IZCard({ iz }: IZCardProps) {
               <span>{iz.district}, {iz.province}</span>
             </div>
             {iz.owner && (
-              <p className="text-xs text-gray-500 mb-2">Chủ đầu tư: {iz.owner}</p>
+              <p className="text-xs text-gray-500 mb-2">{t('Chủ đầu tư', 'Developer')}: {iz.owner}</p>
             )}
           </div>
           
@@ -60,19 +63,19 @@ export default function IZCard({ iz }: IZCardProps) {
             {iz.verificationStatus === 'verified' && (
               <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
                 <CheckCircle className="w-3 h-3" />
-                <span>Đã xác thực</span>
+                <span>{t('Đã xác thực', 'Verified')}</span>
               </div>
             )}
             {iz.verificationStatus === 'pending' && (
               <div className="flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
                 <Clock className="w-3 h-3" />
-                <span>Chờ xác thực</span>
+                <span>{t('Chờ xác thực', 'Pending')}</span>
               </div>
             )}
             {iz.digitalTransformation && (
               <div className="flex items-center space-x-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
                 <Cpu className="w-3 h-3" />
-                <span>Chuyển đổi số</span>
+                <span>{t('Chuyển đổi số', 'Digital Transformation')}</span>
               </div>
             )}
             {iz.esgStatus !== 'none' && (
@@ -108,14 +111,14 @@ export default function IZCard({ iz }: IZCardProps) {
           <div className="flex items-center space-x-2">
             <Building2 className="w-4 h-4 text-gray-500" />
             <div>
-              <div className="text-xs text-gray-500">Công ty</div>
+              <div className="text-xs text-gray-500">{t('Công ty', 'Companies')}</div>
               <div className="text-sm font-semibold text-gray-900">{iz.totalCompanies}</div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <Users className="w-4 h-4 text-gray-500" />
             <div>
-              <div className="text-xs text-gray-500">Lao động</div>
+              <div className="text-xs text-gray-500">{t('Lao động', 'Employees')}</div>
               <div className="text-sm font-semibold text-gray-900">
                 {(iz.totalEmployees / 1000).toFixed(1)}k
               </div>

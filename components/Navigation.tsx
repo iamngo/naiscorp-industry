@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MapPin, ShoppingBag, Briefcase, Home, Menu, X, Settings, LogOut, User, Building2, Factory as FactoryIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 type NavigationUser = {
   fullName: string;
@@ -16,6 +18,9 @@ export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<NavigationUser>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { language } = useLanguage();
+
+  const t = (vi: string, en: string) => (language === 'vi' ? vi : en);
 
   useEffect(() => {
     // Fetch current user
@@ -42,11 +47,11 @@ export default function Navigation() {
   };
 
   const navItems = [
-    { href: '/', label: 'Trang chủ', icon: Home },
-    { href: '/map', label: 'Bản đồ', icon: MapPin },
-    { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-    { href: '/services', label: 'Services Hub', icon: Building2 },
-    { href: '/investor', label: 'Tư vấn đầu tư', icon: Briefcase },
+    { href: '/', label: t('Trang chủ', 'Home'), icon: Home },
+    { href: '/map', label: t('Bản đồ', 'Industry Map'), icon: MapPin },
+    { href: '/marketplace', label: t('Marketplace', 'Marketplace'), icon: ShoppingBag },
+    { href: '/services', label: t('Dịch vụ', 'Services Hub'), icon: Building2 },
+    { href: '/investor', label: t('Tư vấn đầu tư', 'Investment Portal'), icon: Briefcase },
   ];
 
   return (
@@ -87,6 +92,7 @@ export default function Navigation() {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
             {user ? (
               <div className="relative">
                 <button
@@ -105,7 +111,7 @@ export default function Navigation() {
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <Settings className="w-4 h-4" />
-                        <span>Admin Dashboard</span>
+                        <span>{t('Bảng điều khiển Admin', 'Admin Dashboard')}</span>
                       </Link>
                     )}
                     {(user.role === 'iz' || user.role === 'factory') && (
@@ -115,7 +121,7 @@ export default function Navigation() {
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <FactoryIcon className="w-4 h-4" />
-                        <span>Đăng ký Nhà máy</span>
+                        <span>{t('Đăng ký Nhà máy', 'Register Factory')}</span>
                       </Link>
                     )}
                     {user.role === 'iz' && (
@@ -125,7 +131,7 @@ export default function Navigation() {
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <Building2 className="w-4 h-4" />
-                        <span>Đăng ký KCN</span>
+                        <span>{t('Đăng ký KCN', 'Register IZ')}</span>
                       </Link>
                     )}
                     <button
@@ -133,7 +139,7 @@ export default function Navigation() {
                       className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>Đăng xuất</span>
+                      <span>{t('Đăng xuất', 'Sign out')}</span>
                     </button>
                   </div>
                 )}
@@ -143,7 +149,7 @@ export default function Navigation() {
                 href="/login"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Đăng nhập
+                {t('Đăng nhập', 'Sign in')}
               </Link>
             )}
           </div>
@@ -160,6 +166,9 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-2 border-t">
+            <div className="px-4">
+              <LanguageSwitcher className="w-full justify-center" />
+            </div>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -185,7 +194,7 @@ export default function Navigation() {
                 className="w-full flex items-center space-x-2 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Đăng xuất</span>
+                <span>{t('Đăng xuất', 'Sign out')}</span>
               </button>
             ) : (
               <Link
@@ -193,7 +202,7 @@ export default function Navigation() {
                 className="block px-4 py-3 rounded-lg bg-blue-600 text-white text-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Đăng nhập
+                {t('Đăng nhập', 'Sign in')}
               </Link>
             )}
           </div>
