@@ -135,7 +135,7 @@ export default function InvestorPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const verifiedIZs = getVerifiedIZs();
       const recommendedIZObjects = verifiedIZs
         .filter((iz) => {
@@ -150,16 +150,6 @@ export default function InvestorPage() {
       setRecommendedIZDetails(recommendedIZObjects);
       setIsSubmitting(false);
       setPlanGenerated(true);
-      planSessionRef.current = `plan-${Date.now()}`;
-      logInvestmentEvent({
-        action: 'generate_plan',
-        planId: planSessionRef.current,
-        budget,
-        industry,
-        preferredLocation,
-        investmentType,
-        recommendations: recommendedIds,
-      });
 
       const primaryRegionName = findRegionName(recommendedIZObjects[0]?.regionId);
       const consultantPool = getConsultantsByIndustry(industry, primaryRegionName);
@@ -168,10 +158,57 @@ export default function InvestorPage() {
       setConsultantStatus('pending');
       setSelectedMeetingSlot('');
       setAutoConnectResult(null);
+
+      let newPlanId: string | null = null;
+      try {
+        const planPayload = {
+          investorId: 'investor-portal-user',
+          budget: parseInt(budget || '0', 10) || 0,
+          investmentType,
+          preferredIndustries: industry ? [industry] : [],
+          preferredLocations: preferredLocation ? [preferredLocation] : [],
+          recommendations: {
+            izIds: recommendedIds,
+            supplierIds: [],
+            rationale: 'Tự động đề xuất từ Investment Portal',
+          },
+          status: 'submitted',
+          advisorId: consultantToAssign?.id,
+        };
+
+        const response = await fetch('/api/investment-plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(planPayload),
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          newPlanId = json?.data?.id ?? null;
+        }
+      } catch (error) {
+        console.error('[InvestorPortal] save investment plan failed', error);
+      }
+
+      if (!newPlanId) {
+        newPlanId = `plan-${Date.now()}`;
+      }
+      planSessionRef.current = newPlanId;
+
+      logInvestmentEvent({
+        action: 'generate_plan',
+        planId: newPlanId,
+        budget,
+        industry,
+        preferredLocation,
+        investmentType,
+        recommendations: recommendedIds,
+      });
+
       if (consultantToAssign) {
         logInvestmentEvent({
           action: 'assign_consultant',
-          planId: planSessionRef.current,
+          planId: newPlanId,
           consultantId: consultantToAssign.id,
           consultantName: consultantToAssign.name,
         });
@@ -312,7 +349,7 @@ export default function InvestorPage() {
     y += 8;
     doc.setFontSize(11);
 
-    planSummary.izs.forEach((iz, idx) => {
+    planSummary.izs.forEach((iz) => {
       if (y > 270) {
         doc.addPage();
         y = 20;

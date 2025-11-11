@@ -610,6 +610,22 @@ export default function MapPage() {
                 </div>
               ))}
             </div>
+            {topologyLevel === 'iz' && selectedIZData?.layoutMapUrl && (
+              <div className="mt-4 flex flex-col gap-2 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                {selectedIZData.layoutMapDescription && (
+                  <p className="text-xs text-blue-700">{selectedIZData.layoutMapDescription}</p>
+                )}
+                <a
+                  href={selectedIZData.layoutMapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex w-fit items-center space-x-2 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+                >
+                  <Network className="w-3 h-3" />
+                  <span>Mở layout chi tiết KCN</span>
+                </a>
+              </div>
+            )}
           </div>
         )}
 

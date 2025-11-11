@@ -2,8 +2,31 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { mockFactories, mockServices, mockIndustrialZones, mockSuppliers } from '@/lib/mockData';
-import type { Factory, Service, ConnectionRequest, IndustrialZone, Supplier, AdminLog } from '@/types/database';
+import {
+  mockFactories,
+  mockServices,
+  mockIndustrialZones,
+  mockSuppliers,
+  mockProducts,
+  mockBuyerLeads,
+  mockInvestorDeals,
+  mockContentQueue,
+  mockUsers,
+} from '@/lib/mockData';
+import type {
+  Factory,
+  Service,
+  ConnectionRequest,
+  IndustrialZone,
+  Supplier,
+  AdminLog,
+  Product,
+  BuyerLead,
+  InvestorDeal,
+  InvestmentPlan,
+  ContentItem,
+  User,
+} from '@/types/database';
 
 type MockStoreData = {
   factories: Factory[];
@@ -12,6 +35,12 @@ type MockStoreData = {
   industrialZones: IndustrialZone[];
   suppliers: Supplier[];
   adminLogs: AdminLog[];
+  products: Product[];
+  buyerLeads: BuyerLead[];
+  investorDeals: InvestorDeal[];
+  investmentPlans: InvestmentPlan[];
+  contentQueue: ContentItem[];
+  users: User[];
 };
 
 const DATA_DIRECTORY = path.join(process.cwd(), 'data');
@@ -43,6 +72,12 @@ async function ensureCache(): Promise<MockStoreData> {
         : clone(mockIndustrialZones),
       suppliers: Array.isArray(parsed.suppliers) ? parsed.suppliers : clone(mockSuppliers),
       adminLogs: Array.isArray(parsed.adminLogs) ? parsed.adminLogs : [],
+      products: Array.isArray(parsed.products) ? parsed.products : clone(mockProducts),
+      buyerLeads: Array.isArray(parsed.buyerLeads) ? parsed.buyerLeads : clone(mockBuyerLeads),
+      investorDeals: Array.isArray(parsed.investorDeals) ? parsed.investorDeals : clone(mockInvestorDeals),
+      investmentPlans: Array.isArray(parsed.investmentPlans) ? parsed.investmentPlans : [],
+      contentQueue: Array.isArray(parsed.contentQueue) ? parsed.contentQueue : clone(mockContentQueue),
+      users: Array.isArray(parsed.users) ? parsed.users : clone(mockUsers),
     };
   } catch {
     storeCache = {
@@ -52,6 +87,12 @@ async function ensureCache(): Promise<MockStoreData> {
       industrialZones: clone(mockIndustrialZones),
       suppliers: clone(mockSuppliers),
       adminLogs: [],
+      products: clone(mockProducts),
+      buyerLeads: clone(mockBuyerLeads),
+      investorDeals: clone(mockInvestorDeals),
+      investmentPlans: [],
+      contentQueue: clone(mockContentQueue),
+      users: clone(mockUsers),
     };
     await persistStore();
   }
@@ -317,4 +358,183 @@ export async function updateSupplier(
   return clone(updated);
 }
 
+/**
+ * Product helpers
+ */
+export async function getAllProducts(): Promise<Product[]> {
+  const store = await ensureCache();
+  return clone(store.products);
+}
 
+export async function getProduct(id: string): Promise<Product | undefined> {
+  const store = await ensureCache();
+  const product = store.products.find((item) => item.id === id);
+  return product ? clone(product) : undefined;
+}
+
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | undefined> {
+  const store = await ensureCache();
+  const index = store.products.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: Product = {
+    ...store.products[index],
+    ...clone(updates),
+    updatedAt: updates.updatedAt ?? new Date().toISOString(),
+  };
+
+  store.products[index] = updated;
+  await persistStore();
+  return clone(updated);
+}
+
+/**
+ * Buyer pipeline helpers
+ */
+export async function getBuyerLeads(): Promise<BuyerLead[]> {
+  const store = await ensureCache();
+  return clone(store.buyerLeads);
+}
+
+export async function updateBuyerLead(
+  id: string,
+  updates: Partial<BuyerLead>,
+): Promise<BuyerLead | undefined> {
+  const store = await ensureCache();
+  const index = store.buyerLeads.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: BuyerLead = {
+    ...store.buyerLeads[index],
+    ...clone(updates),
+  };
+
+  store.buyerLeads[index] = updated;
+  await persistStore();
+  return clone(updated);
+}
+
+/**
+ * Investor pipeline helpers
+ */
+export async function getInvestorDeals(): Promise<InvestorDeal[]> {
+  const store = await ensureCache();
+  return clone(store.investorDeals);
+}
+
+export async function updateInvestorDeal(
+  id: string,
+  updates: Partial<InvestorDeal>,
+): Promise<InvestorDeal | undefined> {
+  const store = await ensureCache();
+  const index = store.investorDeals.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: InvestorDeal = {
+    ...store.investorDeals[index],
+    ...clone(updates),
+  };
+
+  store.investorDeals[index] = updated;
+  await persistStore();
+  return clone(updated);
+}
+
+/**
+ * Investment plan helpers
+ */
+export async function getInvestmentPlans(): Promise<InvestmentPlan[]> {
+  const store = await ensureCache();
+  return clone(store.investmentPlans);
+}
+
+export async function addInvestmentPlan(plan: InvestmentPlan): Promise<InvestmentPlan> {
+  const store = await ensureCache();
+  store.investmentPlans.push(clone(plan));
+  await persistStore();
+  return clone(plan);
+}
+
+export async function updateInvestmentPlan(
+  id: string,
+  updates: Partial<InvestmentPlan>,
+): Promise<InvestmentPlan | undefined> {
+  const store = await ensureCache();
+  const index = store.investmentPlans.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: InvestmentPlan = {
+    ...store.investmentPlans[index],
+    ...clone(updates),
+    updatedAt: updates.updatedAt ?? new Date().toISOString(),
+  };
+
+  store.investmentPlans[index] = updated;
+  await persistStore();
+  return clone(updated);
+}
+
+/**
+ * Content items
+ */
+export async function getContentQueue(): Promise<ContentItem[]> {
+  const store = await ensureCache();
+  return clone(store.contentQueue);
+}
+
+export async function updateContentItem(
+  id: string,
+  updates: Partial<ContentItem>,
+): Promise<ContentItem | undefined> {
+  const store = await ensureCache();
+  const index = store.contentQueue.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: ContentItem = {
+    ...store.contentQueue[index],
+    ...clone(updates),
+  };
+
+  store.contentQueue[index] = updated;
+  await persistStore();
+  return clone(updated);
+}
+
+/**
+ * Users
+ */
+export async function getUsers(): Promise<User[]> {
+  const store = await ensureCache();
+  return clone(store.users);
+}
+
+export async function updateUser(
+  id: string,
+  updates: Partial<User>,
+): Promise<User | undefined> {
+  const store = await ensureCache();
+  const index = store.users.findIndex((item) => item.id === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const updated: User = {
+    ...store.users[index],
+    ...clone(updates),
+    updatedAt: updates.updatedAt ?? new Date().toISOString(),
+  };
+
+  store.users[index] = updated;
+  await persistStore();
+  return clone(updated);
+}

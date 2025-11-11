@@ -294,6 +294,8 @@
       "contactEmail": "info@dongnama-iz.vn",
       "contactPhone": "0274-1234567",
       "website": "https://dongnama-iz.vn",
+      "layoutMapUrl": "https://i.imgur.com/6cxrJjM.png",
+      "layoutMapDescription": "Sơ đồ tổng thể KCN với phân khu chức năng, trục logistics và khu tiện ích.",
       "totalCompanies": 120,
       "totalEmployees": 48000,
       "facilities": [
@@ -336,6 +338,8 @@
       "contactEmail": "contact@vsipbacninh.vn",
       "contactPhone": "0222-7654321",
       "website": "https://vsip.com.vn",
+      "layoutMapUrl": "https://i.imgur.com/1R8g5Qm.png",
+      "layoutMapDescription": "Layout khu công nghiệp VSIP với phân khu nhà máy, trung tâm dịch vụ và khu dân cư chuyên gia.",
       "totalCompanies": 95,
       "totalEmployees": 38000,
       "facilities": [
@@ -374,6 +378,8 @@
       "contactEmail": "support@hoakhanh-iz.vn",
       "contactPhone": "0236-4567890",
       "website": "https://hoakhanh-iz.vn",
+      "layoutMapUrl": "https://i.imgur.com/7y9cM2Q.png",
+      "layoutMapDescription": "Sơ đồ mặt bằng Hoà Khánh nhấn mạnh logistics và khu năng lượng tái tạo.",
       "totalCompanies": 65,
       "totalEmployees": 22000,
       "facilities": [
@@ -907,6 +913,364 @@
         "source": "services_hub"
       },
       "createdAt": "2025-11-11T06:48:54.625Z"
+    },
+    {
+      "id": "log-1762849131000",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762849130564",
+      "details": {
+        "action": "plan_insights",
+        "planId": "plan-1762849130564",
+        "insights": [
+          {
+            "title": "Mức độ phù hợp ngân sách",
+            "description": "Ngân sách của bạn 10.000.000.000 VND so với trung bình 4.800.000.000 VND/nhà máy.",
+            "score": 100
+          },
+          {
+            "title": "Khả năng đáp ứng vị trí",
+            "description": "Có ít nhất 1 KCN trong tỉnh/thành bạn ưu tiên.",
+            "score": 90
+          },
+          {
+            "title": "ESG & Chuyển đổi số",
+            "description": "Các KCN đề xuất đã được xác thực ESG/DX, sẵn sàng cho nhà đầu tư quốc tế.",
+            "score": 60
+          }
+        ],
+        "overallScore": 83,
+        "riskLevel": "Medium",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T08:18:51.000Z"
+    },
+    {
+      "id": "log-1762849158805",
+      "adminId": "system-analytics",
+      "action": "investment_portal_event",
+      "entityType": "investment_portal",
+      "entityId": "plan-1762849130564",
+      "details": {
+        "action": "download_plan",
+        "planId": "plan-1762849130564",
+        "recommendations": [
+          "iz-1"
+        ],
+        "overallScore": 83,
+        "riskLevel": "Medium",
+        "source": "investment_portal"
+      },
+      "createdAt": "2025-11-11T08:19:18.805Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-1",
+      "supplierId": "supp-1",
+      "name": "Vải Cotton 100%",
+      "category": "Dệt may",
+      "description": "Vải cotton chất lượng cao, phù hợp may quần áo xuất khẩu. Độ dày 200gsm.",
+      "price": 45000,
+      "unit": "mét",
+      "minOrder": 1000,
+      "images": [
+        "https://images.unsplash.com/photo-1585129368862-e8afe4974243?w=400"
+      ],
+      "certifications": [
+        "ISO 9001",
+        "OEKO-TEX"
+      ],
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-02-18T00:00:00Z",
+      "verifiedBy": "user-1",
+      "createdAt": "2024-02-01T00:00:00Z",
+      "updatedAt": "2024-02-18T00:00:00Z",
+      "rating": 4.6,
+      "viewCount": 1240,
+      "responseRate": 0.92,
+      "leadCount": 34,
+      "mediaUrls": [
+        "https://images.unsplash.com/photo-1523381050734-0f8c98e97b58?w=400"
+      ]
+    },
+    {
+      "id": "prod-2",
+      "factoryId": "factory-1",
+      "izId": "iz-1",
+      "name": "Module IoT SmartHome",
+      "category": "Điện tử",
+      "description": "Module IoT cho nhà thông minh, hỗ trợ Zigbee, WiFi và Matter.",
+      "price": 180000,
+      "unit": "bộ",
+      "minOrder": 500,
+      "images": [
+        "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400"
+      ],
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-03-01T00:00:00Z",
+      "verifiedBy": "user-1",
+      "createdAt": "2024-02-20T00:00:00Z",
+      "updatedAt": "2024-03-01T00:00:00Z",
+      "rating": 4.9,
+      "viewCount": 980,
+      "responseRate": 0.88,
+      "leadCount": 27,
+      "mediaUrls": [
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400"
+      ]
+    },
+    {
+      "id": "prod-3",
+      "supplierId": "supp-2",
+      "name": "Dịch vụ kho bãi 3PL",
+      "category": "Logistics",
+      "description": "Giải pháp 3PL toàn diện: lưu kho, phân phối, cross-docking, fulfillment.",
+      "price": 3500000,
+      "unit": "container",
+      "minOrder": 5,
+      "images": [
+        "https://images.unsplash.com/photo-1586528116311-ad8dd3c0dbc9?w=400"
+      ],
+      "verificationStatus": "pending",
+      "createdAt": "2024-02-25T00:00:00Z",
+      "updatedAt": "2024-02-25T00:00:00Z",
+      "rating": 4.2,
+      "viewCount": 430,
+      "responseRate": 0.75,
+      "leadCount": 12,
+      "mediaUrls": [
+        "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400"
+      ]
+    }
+  ],
+  "buyerLeads": [
+    {
+      "id": "buyer-1",
+      "company": "Công ty Thương mại Bắc Ninh",
+      "industries": [
+        "Điện tử",
+        "Cơ khí"
+      ],
+      "opportunities": 3,
+      "stage": "Đàm phán",
+      "value": 2300000,
+      "lastContact": "2025-11-09T04:15:00Z",
+      "notes": [
+        "Đang chờ báo giá từ supplier",
+        "Yêu cầu demo giải pháp IoT"
+      ]
+    },
+    {
+      "id": "buyer-2",
+      "company": "Tập đoàn Thực phẩm Mekong",
+      "industries": [
+        "Thực phẩm"
+      ],
+      "opportunities": 2,
+      "stage": "Đang quan tâm",
+      "value": 750000,
+      "lastContact": "2025-11-08T16:00:00Z",
+      "notes": [
+        "Quan tâm đến dịch vụ kho lạnh",
+        "Cần chứng nhận HACCP"
+      ]
+    },
+    {
+      "id": "buyer-3",
+      "company": "Công ty Ô tô Việt Đức",
+      "industries": [
+        "Logistics",
+        "Cơ khí"
+      ],
+      "opportunities": 4,
+      "stage": "Đã ký",
+      "value": 4500000,
+      "lastContact": "2025-11-07T09:30:00Z",
+      "notes": [
+        "Đã ký MOU, chuẩn bị triển khai dự án"
+      ]
+    }
+  ],
+  "investorDeals": [
+    {
+      "id": "investor-1",
+      "fundName": "ASEAN Growth Fund",
+      "focus": [
+        "Điện tử",
+        "Năng lượng"
+      ],
+      "budget": "$25M",
+      "status": "Đánh giá",
+      "owner": "Nguyễn Văn Khánh",
+      "notes": [
+        "Đang thẩm định pháp lý KCN Đông Nam Á"
+      ]
+    },
+    {
+      "id": "investor-2",
+      "fundName": "Pacific Manufacturing Partners",
+      "focus": [
+        "Cơ khí",
+        "Logistics"
+      ],
+      "budget": "$40M",
+      "status": "Hẹn gặp",
+      "owner": "Trần Lan Hương",
+      "notes": [
+        "Cuộc hẹn ngày 15/11 với ban quản lý VSIP Bắc Ninh"
+      ]
+    },
+    {
+      "id": "investor-3",
+      "fundName": "Green Transition Capital",
+      "focus": [
+        "Năng lượng",
+        "ESG"
+      ],
+      "budget": "$60M",
+      "status": "Ký NDA",
+      "owner": "Phạm Quốc Anh",
+      "notes": [
+        "Đã ký NDA, đang yêu cầu thêm báo cáo ESG"
+      ]
+    }
+  ],
+  "investmentPlans": [
+    {
+      "id": "plan-1762849130564",
+      "investorId": "investor-portal-user",
+      "budget": 10000000000,
+      "investmentType": "new",
+      "preferredIndustries": [
+        "Điện tử"
+      ],
+      "preferredLocations": [
+        "Bình Dương"
+      ],
+      "recommendations": {
+        "izIds": [
+          "iz-1"
+        ],
+        "supplierIds": [],
+        "rationale": "Tự động đề xuất từ Investment Portal"
+      },
+      "status": "submitted",
+      "advisorId": "consult-1",
+      "createdAt": "2025-11-11T08:18:50.563Z",
+      "updatedAt": "2025-11-11T08:18:50.563Z"
+    }
+  ],
+  "contentQueue": [
+    {
+      "id": "content-1",
+      "title": "Báo cáo xu hướng chuỗi cung ứng miền Bắc 2025",
+      "type": "news",
+      "owner": "Marketing",
+      "status": "pending",
+      "version": 1,
+      "history": [
+        {
+          "version": 1,
+          "updatedAt": "2025-11-05T08:00:00Z",
+          "updatedBy": "user-3",
+          "notes": "Khởi tạo nội dung"
+        }
+      ],
+      "createdAt": "2025-11-05T08:00:00Z",
+      "updatedAt": "2025-11-05T08:00:00Z"
+    },
+    {
+      "id": "content-2",
+      "title": "Banner chiến dịch ESG Summit",
+      "type": "banner",
+      "owner": "Design",
+      "status": "scheduled",
+      "scheduledAt": "2025-11-15",
+      "version": 2,
+      "history": [
+        {
+          "version": 1,
+          "updatedAt": "2025-10-25T09:00:00Z",
+          "updatedBy": "user-3",
+          "notes": "Bản thiết kế đầu tiên"
+        },
+        {
+          "version": 2,
+          "updatedAt": "2025-11-01T10:30:00Z",
+          "updatedBy": "user-3",
+          "notes": "Điều chỉnh màu sắc theo brand guideline"
+        }
+      ],
+      "createdAt": "2025-10-25T09:00:00Z",
+      "updatedAt": "2025-11-01T10:30:00Z"
+    },
+    {
+      "id": "content-3",
+      "title": "Sự kiện kết nối nhà đầu tư Nhật Bản",
+      "type": "event",
+      "owner": "Events",
+      "status": "published",
+      "scheduledAt": "2025-11-01",
+      "version": 3,
+      "history": [
+        {
+          "version": 1,
+          "updatedAt": "2025-09-10T13:00:00Z",
+          "updatedBy": "user-5",
+          "notes": "Tạo đề bài sự kiện"
+        },
+        {
+          "version": 2,
+          "updatedAt": "2025-10-01T14:00:00Z",
+          "updatedBy": "user-5",
+          "notes": "Cập nhật agenda và diễn giả"
+        },
+        {
+          "version": 3,
+          "updatedAt": "2025-10-20T15:30:00Z",
+          "updatedBy": "user-5",
+          "notes": "Đăng thông tin chính thức và gửi email mời"
+        }
+      ],
+      "createdAt": "2025-09-10T13:00:00Z",
+      "updatedAt": "2025-10-20T15:30:00Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "user-1",
+      "email": "admin@naiscorp.vn",
+      "passwordHash": "$2b$10$example",
+      "role": "admin",
+      "fullName": "Admin System",
+      "phone": "0901234567",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "updatedAt": "2024-01-01T00:00:00Z",
+      "isActive": true
+    },
+    {
+      "id": "user-2",
+      "email": "dongnama@iz.vn",
+      "passwordHash": "$2b$10$example",
+      "role": "iz",
+      "fullName": "Khu Công Nghiệp Đông Nam Á",
+      "phone": "0274-1234567",
+      "createdAt": "2024-01-15T00:00:00Z",
+      "updatedAt": "2024-01-15T00:00:00Z",
+      "isActive": true
+    },
+    {
+      "id": "user-3",
+      "email": "vatai@supplier.vn",
+      "passwordHash": "$2b$10$example",
+      "role": "supplier",
+      "fullName": "Công ty TNHH Vật liệu Công nghiệp",
+      "phone": "028-1234567",
+      "createdAt": "2024-02-01T00:00:00Z",
+      "updatedAt": "2024-02-01T00:00:00Z",
+      "isActive": true
     }
   ]
 }

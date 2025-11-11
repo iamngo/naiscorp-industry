@@ -135,6 +135,8 @@ export const mockIndustrialZones: IndustrialZone[] = [
     contactEmail: 'info@dongnama-iz.vn',
     contactPhone: '0274-1234567',
     website: 'https://dongnama-iz.vn',
+    layoutMapUrl: 'https://i.imgur.com/6cxrJjM.png',
+    layoutMapDescription: 'Sơ đồ tổng thể KCN với phân khu chức năng, trục logistics và khu tiện ích.',
     totalCompanies: 120,
     totalEmployees: 48000,
     facilities: ['Hải quan tại chỗ', 'Ký túc xá công nhân', 'Hệ thống xử lý nước thải', 'Trung tâm logistics'],
@@ -165,6 +167,8 @@ export const mockIndustrialZones: IndustrialZone[] = [
     contactEmail: 'contact@vsipbacninh.vn',
     contactPhone: '0222-7654321',
     website: 'https://vsip.com.vn',
+    layoutMapUrl: 'https://i.imgur.com/1R8g5Qm.png',
+    layoutMapDescription: 'Layout khu công nghiệp VSIP với phân khu nhà máy, trung tâm dịch vụ và khu dân cư chuyên gia.',
     totalCompanies: 95,
     totalEmployees: 38000,
     facilities: ['Trung tâm logistics', 'Hệ thống xử lý nước thải', 'Khu lưu trú chuyên gia'],
@@ -193,6 +197,8 @@ export const mockIndustrialZones: IndustrialZone[] = [
     contactEmail: 'support@hoakhanh-iz.vn',
     contactPhone: '0236-4567890',
     website: 'https://hoakhanh-iz.vn',
+    layoutMapUrl: 'https://i.imgur.com/7y9cM2Q.png',
+    layoutMapDescription: 'Sơ đồ mặt bằng Hoà Khánh nhấn mạnh logistics và khu năng lượng tái tạo.',
     totalCompanies: 65,
     totalEmployees: 22000,
     facilities: ['Trạm điện 110kV', 'Hệ thống xử lý nước thải', 'Trung tâm đào tạo nhân lực'],
@@ -404,6 +410,9 @@ export const mockSuppliers: Supplier[] = [
     annualExportRevenueUSD: 18000000,
     languages: ['vi', 'en', 'ja'],
     videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    certifications: ['OEKO-TEX', 'ISO 9001'],
+    responseRate: 0.95,
+    lastActiveAt: '2025-11-10T03:00:00Z',
     description:
       'Nhà cung ứng vải xuất khẩu với hệ thống nhuộm – hoàn tất đạt chuẩn OEKO-TEX, chuyên phối hợp cùng các nhà máy may FOB tại Bình Dương.',
     contactEmail: 'sales@hoabinh-textile.vn',
@@ -433,6 +442,9 @@ export const mockSuppliers: Supplier[] = [
     annualExportRevenueUSD: 12500000,
     languages: ['vi', 'en'],
     videoUrl: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I',
+    certifications: ['ISO 22000', 'HACCP'],
+    responseRate: 0.88,
+    lastActiveAt: '2025-11-09T10:12:00Z',
     description:
       'Đơn vị logistics 3PL với mạng lưới kho tại VSIP, ICD Sóng Thần và hệ thống quản lý WMS tích hợp API với các sàn TMĐT.',
     contactEmail: 'hello@logihub.vn',
@@ -461,6 +473,9 @@ export const mockSuppliers: Supplier[] = [
     annualExportRevenueUSD: 6500000,
     languages: ['vi', 'en'],
     videoUrl: 'https://www.youtube.com/watch?v=QH2-TGUlwu4',
+    certifications: ['ISO 50001', 'ESG Certified'],
+    responseRate: 0.82,
+    lastActiveAt: '2025-11-08T07:45:00Z',
     description:
       'Đội ngũ kỹ sư triển khai giải pháp năng lượng tái tạo, lưu trữ và tối ưu chi phí điện cho các nhà máy công nghiệp.',
     contactEmail: 'contact@greentech.vn',
@@ -490,6 +505,10 @@ export const mockProducts: Product[] = [
     createdAt: '2024-02-01T00:00:00Z',
     updatedAt: '2024-02-18T00:00:00Z',
     rating: 4.6,
+    viewCount: 1240,
+    responseRate: 0.92,
+    leadCount: 34,
+    mediaUrls: ['https://images.unsplash.com/photo-1523381050734-0f8c98e97b58?w=400'],
   },
   {
     id: 'prod-2',
@@ -508,6 +527,10 @@ export const mockProducts: Product[] = [
     createdAt: '2024-02-20T00:00:00Z',
     updatedAt: '2024-03-01T00:00:00Z',
     rating: 4.9,
+    viewCount: 980,
+    responseRate: 0.88,
+    leadCount: 27,
+    mediaUrls: ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400'],
   },
   {
     id: 'prod-3',
@@ -523,6 +546,10 @@ export const mockProducts: Product[] = [
     createdAt: '2024-02-25T00:00:00Z',
     updatedAt: '2024-02-25T00:00:00Z',
     rating: 4.2,
+    viewCount: 430,
+    responseRate: 0.75,
+    leadCount: 12,
+    mediaUrls: ['https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400'],
   },
 ];
 
@@ -535,6 +562,7 @@ export const mockBuyerLeads = [
     stage: 'Đàm phán',
     value: 2300000,
     lastContact: '2025-11-09T04:15:00Z',
+    notes: ['Đang chờ báo giá từ supplier', 'Yêu cầu demo giải pháp IoT'],
   },
   {
     id: 'buyer-2',
@@ -544,6 +572,7 @@ export const mockBuyerLeads = [
     stage: 'Đang quan tâm',
     value: 750000,
     lastContact: '2025-11-08T16:00:00Z',
+    notes: ['Quan tâm đến dịch vụ kho lạnh', 'Cần chứng nhận HACCP'],
   },
   {
     id: 'buyer-3',
@@ -553,8 +582,9 @@ export const mockBuyerLeads = [
     stage: 'Đã ký',
     value: 4500000,
     lastContact: '2025-11-07T09:30:00Z',
+    notes: ['Đã ký MOU, chuẩn bị triển khai dự án'],
   },
-] as const;
+];
 
 export const mockInvestorDeals = [
   {
@@ -564,6 +594,7 @@ export const mockInvestorDeals = [
     budget: '$25M',
     status: 'Đánh giá',
     owner: 'Nguyễn Văn Khánh',
+    notes: ['Đang thẩm định pháp lý KCN Đông Nam Á'],
   },
   {
     id: 'investor-2',
@@ -572,6 +603,7 @@ export const mockInvestorDeals = [
     budget: '$40M',
     status: 'Hẹn gặp',
     owner: 'Trần Lan Hương',
+    notes: ['Cuộc hẹn ngày 15/11 với ban quản lý VSIP Bắc Ninh'],
   },
   {
     id: 'investor-3',
@@ -580,14 +612,129 @@ export const mockInvestorDeals = [
     budget: '$60M',
     status: 'Ký NDA',
     owner: 'Phạm Quốc Anh',
+    notes: ['Đã ký NDA, đang yêu cầu thêm báo cáo ESG'],
   },
-] as const;
+];
 
 export const mockReportHighlights = [
   { title: 'Leads mới tuần này', value: 18, change: '+12%' },
   { title: 'RFQ đang mở', value: 9, change: '+4%' },
   { title: 'Cuộc gọi tư vấn đã đặt', value: 7, change: '+2' },
 ] as const;
+
+export const mockContentQueue = [
+  {
+    id: 'content-1',
+    title: 'Báo cáo xu hướng chuỗi cung ứng miền Bắc 2025',
+    type: 'news',
+    owner: 'Marketing',
+    status: 'pending',
+    scheduledAt: undefined,
+    version: 1,
+    history: [
+      {
+        version: 1,
+        updatedAt: '2025-11-05T08:00:00Z',
+        updatedBy: 'user-3',
+        notes: 'Khởi tạo nội dung',
+      },
+    ],
+    createdAt: '2025-11-05T08:00:00Z',
+    updatedAt: '2025-11-05T08:00:00Z',
+  },
+  {
+    id: 'content-2',
+    title: 'Banner chiến dịch ESG Summit',
+    type: 'banner',
+    owner: 'Design',
+    status: 'scheduled',
+    scheduledAt: '2025-11-15',
+    version: 2,
+    history: [
+      {
+        version: 1,
+        updatedAt: '2025-10-25T09:00:00Z',
+        updatedBy: 'user-3',
+        notes: 'Bản thiết kế đầu tiên',
+      },
+      {
+        version: 2,
+        updatedAt: '2025-11-01T10:30:00Z',
+        updatedBy: 'user-3',
+        notes: 'Điều chỉnh màu sắc theo brand guideline',
+      },
+    ],
+    createdAt: '2025-10-25T09:00:00Z',
+    updatedAt: '2025-11-01T10:30:00Z',
+  },
+  {
+    id: 'content-3',
+    title: 'Sự kiện kết nối nhà đầu tư Nhật Bản',
+    type: 'event',
+    owner: 'Events',
+    status: 'published',
+    scheduledAt: '2025-11-01',
+    version: 3,
+    history: [
+      {
+        version: 1,
+        updatedAt: '2025-09-10T13:00:00Z',
+        updatedBy: 'user-5',
+        notes: 'Tạo đề bài sự kiện',
+      },
+      {
+        version: 2,
+        updatedAt: '2025-10-01T14:00:00Z',
+        updatedBy: 'user-5',
+        notes: 'Cập nhật agenda và diễn giả',
+      },
+      {
+        version: 3,
+        updatedAt: '2025-10-20T15:30:00Z',
+        updatedBy: 'user-5',
+        notes: 'Đăng thông tin chính thức và gửi email mời',
+      },
+    ],
+    createdAt: '2025-09-10T13:00:00Z',
+    updatedAt: '2025-10-20T15:30:00Z',
+  },
+];
+
+export const mockUsers = [
+  {
+    id: 'user-1',
+    email: 'admin@naiscorp.vn',
+    passwordHash: '$2b$10$example',
+    role: 'admin' as const,
+    fullName: 'Admin System',
+    phone: '0901234567',
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    isActive: true,
+  },
+  {
+    id: 'user-2',
+    email: 'dongnama@iz.vn',
+    passwordHash: '$2b$10$example',
+    role: 'iz' as const,
+    fullName: 'Khu Công Nghiệp Đông Nam Á',
+    phone: '0274-1234567',
+    createdAt: '2024-01-15T00:00:00Z',
+    updatedAt: '2024-01-15T00:00:00Z',
+    isActive: true,
+  },
+  {
+    id: 'user-3',
+    email: 'vatai@supplier.vn',
+    passwordHash: '$2b$10$example',
+    role: 'supplier' as const,
+    fullName: 'Công ty TNHH Vật liệu Công nghiệp',
+    phone: '028-1234567',
+    createdAt: '2024-02-01T00:00:00Z',
+    updatedAt: '2024-02-01T00:00:00Z',
+    isActive: true,
+  },
+];
 
 // ===== Services (Industrial Services Hub) =====
 export const mockServices: Service[] = [

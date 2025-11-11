@@ -81,6 +81,8 @@ export interface IndustrialZone {
   contactEmail: string;
   contactPhone: string;
   website?: string;
+  layoutMapUrl?: string;
+  layoutMapDescription?: string;
   totalCompanies: number;
   totalEmployees: number;
   facilities: string[]; // Tiện ích
@@ -150,6 +152,9 @@ export interface Supplier {
   annualExportRevenueUSD?: number;
   languages?: string[];
   videoUrl?: string;
+  certifications?: string[];
+  responseRate?: number;
+  lastActiveAt?: string;
 }
 
 // Buyer
@@ -227,6 +232,10 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   rating?: number;
+  viewCount?: number;
+  responseRate?: number;
+  leadCount?: number;
+  mediaUrls?: string[];
 }
 
 // RFQ (Request for Quotation)
@@ -335,7 +344,7 @@ export interface AdminLog {
   action: string; // 'verify_iz', 'approve_product', etc.
   entityType: string; // 'industrial_zone', 'supplier', etc.
   entityId: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -347,6 +356,7 @@ export interface BuyerLead {
   stage: string;
   value: number;
   lastContact: string;
+  notes?: string[];
 }
 
 export interface InvestorDeal {
@@ -356,11 +366,32 @@ export interface InvestorDeal {
   budget: string;
   status: string;
   owner: string;
+  notes?: string[];
 }
 
 export interface ReportHighlight {
   title: string;
   value: number;
   change: string;
+}
+
+export interface ContentHistoryEntry {
+  version: number;
+  updatedAt: string;
+  updatedBy: string;
+  notes?: string;
+}
+
+export interface ContentItem {
+  id: string;
+  title: string;
+  type: 'news' | 'banner' | 'event' | 'page';
+  owner: string;
+  status: 'pending' | 'scheduled' | 'published';
+  scheduledAt?: string;
+  version: number;
+  history: ContentHistoryEntry[];
+  createdAt: string;
+  updatedAt: string;
 }
 
