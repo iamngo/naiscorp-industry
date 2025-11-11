@@ -1,55 +1,103 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Factory, IndustrialZone } from '@/types/database';
+import { Factory, IndustrialZone, Cluster } from '@/types/database';
 import { 
-  MapPin, CheckCircle, Leaf, Cpu, Factory as FactoryIcon, Users, Phone, Mail, Globe,
-  Video, ArrowLeft, Edit, Package, Clock, Building2
+  MapPin, CheckCircle, Leaf, Cpu, Factory as FactoryIcon, Phone, Mail, Globe,
+  Video, ArrowLeft, Package, Clock, Building2
 } from 'lucide-react';
 import Link from 'next/link';
-import { getFactoryById, getIZById, getFactoriesByIZId, getClusterById } from '@/lib/mockData';
+import { getIZById, getClusterById } from '@/lib/mockData';
 import FactoryClusterMap from '@/components/FactoryClusterMap';
 import ConnectionRequestButton from '@/components/ConnectionRequestButton';
 
 export default function FactoryDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const factoryId = params.id as string;
   const [factory, setFactory] = useState<Factory | null>(null);
   const [iz, setIZ] = useState<IndustrialZone | null>(null);
-  const [cluster, setCluster] = useState<any>(null);
+  const [cluster, setCluster] = useState<Cluster | null>(null);
   const [relatedFactories, setRelatedFactories] = useState<Factory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch factory data
-    const factoryData = getFactoryById(factoryId);
-    if (factoryData) {
-      setFactory(factoryData);
-      const izData = getIZById(factoryData.izId);
-      if (izData) {
-        setIZ(izData);
-      }
-      if (factoryData.clusterId) {
-        const clusterData = getClusterById(factoryData.clusterId);
-        if (clusterData) {
-          setCluster(clusterData);
-          // Get factories in same cluster
-          const clusterFactories = getFactoriesByIZId(factoryData.izId).filter(
-            f => f.clusterId === factoryData.clusterId
-          );
-          setRelatedFactories(clusterFactories);
+    let isMounted = true;
+    const fetchFactory = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/factories/${factoryId}`);
+        if (!res.ok) {
+          if (isMounted) {
+            setFactory(null);
+          }
+          return;
         }
-      } else {
-        // Get factories in same IZ but no cluster
-        const izFactories = getFactoriesByIZId(factoryData.izId).filter(
-          f => !f.clusterId
-        );
-        setRelatedFactories(izFactories);
+
+        const data = await res.json();
+        const factoryData: Factory | null = data?.data ?? null;
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!factoryData) {
+          setFactory(null);
+          return;
+        }
+
+        setFactory(factoryData);
+        const izData = getIZById(factoryData.izId);
+        if (izData) {
+          setIZ(izData);
+        }
+
+        if (factoryData.clusterId) {
+          const clusterData = getClusterById(factoryData.clusterId);
+          if (clusterData) {
+            setCluster(clusterData);
+          }
+        } else {
+          setCluster(null);
+        }
+
+        try {
+          const relatedResponse = await fetch(`/api/factories?izId=${factoryData.izId}`);
+          const relatedJson = await relatedResponse.json();
+          const relatedList: Factory[] = Array.isArray(relatedJson?.data) ? relatedJson.data : [];
+
+          const filteredRelated = relatedList.filter((item) => {
+            if (item.id === factoryData.id) return false;
+            if (factoryData.clusterId) {
+              return item.clusterId === factoryData.clusterId;
+            }
+            return !item.clusterId;
+          });
+
+          if (isMounted) {
+            setRelatedFactories(filteredRelated);
+          }
+        } catch {
+          if (isMounted) {
+            setRelatedFactories([]);
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setFactory(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    }
-    setLoading(false);
+    };
+
+    fetchFactory();
+
+    return () => {
+      isMounted = false;
+    };
   }, [factoryId]);
 
   const getESGColor = (status: string) => {

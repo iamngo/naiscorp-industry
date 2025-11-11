@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFactoryById } from '@/lib/mockData';
+import {
+  deleteFactory,
+  getFactory,
+  updateFactory,
+} from '@/lib/mockStore';
+
+type FactoryRouteContext = {
+  params: Promise<{ id: string }>;
+};
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: FactoryRouteContext,
 ) {
   try {
-    const factory = getFactoryById(params.id);
+    const { id } = await context.params;
+    console.log('[API] get factory request', { id });
+    const factory = await getFactory(id);
     
     if (!factory) {
       return NextResponse.json(
@@ -20,6 +30,7 @@ export async function GET(
       data: factory,
     });
   } catch (error) {
+    console.error('[API] update factory failed', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -29,31 +40,39 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: FactoryRouteContext,
 ) {
   try {
+    const { id } = await context.params;
+    console.log('[API] update factory request', { id });
     const body = await request.json();
-    const factory = getFactoryById(params.id);
+    const factory = await getFactory(id);
     
     if (!factory) {
+      console.warn('[API] update factory not found', { id });
       return NextResponse.json(
         { success: false, error: 'Factory not found' },
         { status: 404 }
       );
     }
 
-    // Update factory (mock)
-    const updatedFactory = {
-      ...factory,
+    const updatedFactory = await updateFactory(id, {
       ...body,
+      latitude: body.latitude !== undefined
+        ? (typeof body.latitude === 'number' ? body.latitude : parseFloat(body.latitude) || factory.latitude)
+        : factory.latitude,
+      longitude: body.longitude !== undefined
+        ? (typeof body.longitude === 'number' ? body.longitude : parseFloat(body.longitude) || factory.longitude)
+        : factory.longitude,
       updatedAt: new Date().toISOString(),
-    };
+    });
 
     return NextResponse.json({
       success: true,
       data: updatedFactory,
     });
   } catch (error) {
+    console.error('[API] delete factory failed', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -63,12 +82,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: FactoryRouteContext,
 ) {
   try {
-    const factory = getFactoryById(params.id);
-    
-    if (!factory) {
+    const { id } = await context.params;
+    console.log('[API] delete factory request', { id });
+    const deleted = await deleteFactory(id);
+
+    if (!deleted) {
+      console.warn('[API] delete factory not found', { id });
       return NextResponse.json(
         { success: false, error: 'Factory not found' },
         { status: 404 }
@@ -79,7 +101,7 @@ export async function DELETE(
       success: true,
       message: 'Factory deleted successfully',
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

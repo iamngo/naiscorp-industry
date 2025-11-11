@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, ShoppingBag, Briefcase, Home, Menu, X, Settings, LogOut, User, Building2 } from 'lucide-react';
+import { MapPin, ShoppingBag, Briefcase, Home, Menu, X, Settings, LogOut, User, Building2, Factory as FactoryIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+type NavigationUser = {
+  fullName: string;
+  role: string;
+  email?: string;
+} | null;
 
 export default function Navigation() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<NavigationUser>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -17,7 +23,11 @@ export default function Navigation() {
       .then(res => res.json())
       .then(data => {
         if (data.user) {
-          setUser(data.user);
+          setUser({
+            fullName: data.user.fullName || data.user.email || 'Người dùng',
+            role: data.user.role || 'guest',
+            email: data.user.email,
+          });
         }
       })
       .catch(() => {
@@ -84,7 +94,7 @@ export default function Navigation() {
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100"
                 >
                   <User className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm text-gray-700">{user.fullName}</span>
+                  <span className="text-sm text-gray-700">{user?.fullName ?? 'Người dùng'}</span>
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
@@ -104,7 +114,7 @@ export default function Navigation() {
                         className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        <Factory className="w-4 h-4" />
+                        <FactoryIcon className="w-4 h-4" />
                         <span>Đăng ký Nhà máy</span>
                       </Link>
                     )}

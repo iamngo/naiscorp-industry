@@ -1,0 +1,379 @@
+{
+  "factories": [
+    {
+      "id": "factory-1",
+      "userId": "user-21",
+      "izId": "iz-1",
+      "clusterId": "cluster-1",
+      "name": "Nhà máy Linh kiện Điện tử ABC",
+      "lotNumber": "Lô A-12",
+      "address": "Lô A-12, KCN Đông Nam Á, Bình Dương",
+      "latitude": 10.905,
+      "longitude": 106.77,
+      "industries": [
+        "Điện tử"
+      ],
+      "description": "Sản xuất PCB, module IoT và linh kiện cho thiết bị gia dụng.",
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-02-01T00:00:00Z",
+      "verifiedBy": "user-1",
+      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "esgStatus": "environmental",
+      "digitalTransformation": true,
+      "contactEmail": "contact@abc-electronics.vn",
+      "contactPhone": "0274-1111111",
+      "website": "https://abc-electronics.vn",
+      "productionCapacity": "10 triệu PCB/năm",
+      "products": [
+        "PCB",
+        "Module IoT",
+        "Bộ nguồn"
+      ],
+      "linkedBuyerIds": [
+        "buyer-1",
+        "buyer-2"
+      ],
+      "linkedSupplierIds": [
+        "supp-1",
+        "supp-2"
+      ],
+      "createdAt": "2024-01-25T00:00:00Z",
+      "updatedAt": "2024-03-01T00:00:00Z"
+    },
+    {
+      "id": "factory-2",
+      "userId": "user-22",
+      "izId": "iz-1",
+      "clusterId": "cluster-1",
+      "name": "Nhà máy Cơ khí Chính xác Mekong",
+      "lotNumber": "Lô A-15",
+      "address": "Lô A-15, KCN Đông Nam Á, Bình Dương",
+      "latitude": 10.902,
+      "longitude": 106.772,
+      "industries": [
+        "Cơ khí"
+      ],
+      "description": "Gia công chi tiết cơ khí chính xác cho ngành ô tô và xe máy.",
+      "verificationStatus": "pending",
+      "esgStatus": "social",
+      "digitalTransformation": false,
+      "contactEmail": "info@mekong-precision.vn",
+      "contactPhone": "0274-2222222",
+      "productionCapacity": "500.000 bộ linh kiện/năm",
+      "products": [
+        "Vỏ hộp số",
+        "Trục cam",
+        "Linh kiện CNC"
+      ],
+      "createdAt": "2024-01-28T00:00:00Z",
+      "updatedAt": "2024-02-20T00:00:00Z"
+    },
+    {
+      "id": "factory-3",
+      "userId": "user-23",
+      "izId": "iz-1",
+      "clusterId": "cluster-2",
+      "name": "Trung tâm Logistics SmartPort",
+      "lotNumber": "Lô B-03",
+      "address": "Lô B-03, KCN Đông Nam Á, Bình Dương",
+      "latitude": 10.899,
+      "longitude": 106.765,
+      "industries": [
+        "Logistics"
+      ],
+      "description": "Kho thông minh, quản lý bằng IoT và hệ thống WMS tích hợp.",
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-02-15T00:00:00Z",
+      "verifiedBy": "user-1",
+      "esgStatus": "governance",
+      "digitalTransformation": true,
+      "contactEmail": "hello@smartport.vn",
+      "contactPhone": "0274-3333333",
+      "website": "https://smartport.vn",
+      "productionCapacity": "2.5 triệu đơn hàng/năm",
+      "products": [
+        "Dịch vụ kho bãi",
+        "Cross-docking",
+        "3PL"
+      ],
+      "createdAt": "2024-01-30T00:00:00Z",
+      "updatedAt": "2024-03-02T00:00:00Z"
+    },
+    {
+      "id": "factory-4",
+      "userId": "user-24",
+      "izId": "iz-2",
+      "clusterId": "cluster-3",
+      "name": "Nhà máy Bán dẫn TechFuture",
+      "lotNumber": "Lô C-05",
+      "address": "Lô C-05, KCN VSIP Bắc Ninh",
+      "latitude": 21.114,
+      "longitude": 105.978,
+      "industries": [
+        "Điện tử",
+        "Công nghệ cao"
+      ],
+      "description": "Dây chuyền SMT và đóng gói chip bán dẫn cho thiết bị viễn thông.",
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-03-05T00:00:00Z",
+      "verifiedBy": "user-1",
+      "esgStatus": "all",
+      "digitalTransformation": true,
+      "contactEmail": "contact@techfuture.vn",
+      "contactPhone": "0222-8888888",
+      "website": "https://techfuture.vn",
+      "productionCapacity": "5 triệu chip/năm",
+      "products": [
+        "Chip viễn thông",
+        "Module 5G",
+        "Bảng mạch cao cấp"
+      ],
+      "createdAt": "2024-02-01T00:00:00Z",
+      "updatedAt": "2024-03-05T00:00:00Z"
+    },
+    {
+      "id": "factory-5",
+      "userId": "user-25",
+      "izId": "iz-3",
+      "clusterId": "cluster-4",
+      "name": "Nhà máy Năng lượng Xanh Pacific",
+      "lotNumber": "Lô D-09",
+      "address": "Lô D-09, KCN Hòa Khánh, Đà Nẵng",
+      "latitude": 16.092,
+      "longitude": 108.154,
+      "industries": [
+        "Năng lượng",
+        "Logistics"
+      ],
+      "description": "Sản xuất thiết bị năng lượng tái tạo và cung cấp dịch vụ kho lạnh.",
+      "verificationStatus": "verified",
+      "esgStatus": "environmental",
+      "digitalTransformation": false,
+      "contactEmail": "info@pacificgreen.vn",
+      "contactPhone": "0236-9999999",
+      "productionCapacity": "120 MW thiết bị/năm",
+      "products": [
+        "Module năng lượng mặt trời",
+        "Thiết bị lưu trữ",
+        "Dịch vụ kho lạnh"
+      ],
+      "createdAt": "2024-02-05T00:00:00Z",
+      "updatedAt": "2025-11-11T01:20:23.671Z",
+      "verifiedAt": "2025-11-11T01:20:22.562Z"
+    },
+    {
+      "id": "factory-1762767794674",
+      "userId": "user-2",
+      "izId": "iz-1",
+      "name": "Nhà máy sản xuất gỗ",
+      "lotNumber": "Lô B-3",
+      "address": "633 36, Phú Lợi, Thủ Dầu Một, Bình Dương, Việt Nam",
+      "latitude": 10.990399,
+      "longitude": 106.691819,
+      "industries": [
+        "Vật liệu xây dựng"
+      ],
+      "description": "nhà máy sản xuất gỗ",
+      "verificationStatus": "verified",
+      "videoUrl": "https://www.youtube.com/watch?v=cmVIiLIMi-s",
+      "esgStatus": "all",
+      "digitalTransformation": false,
+      "contactEmail": "nganlazy02@gmail.com",
+      "contactPhone": "0375950082",
+      "productionCapacity": "10 triệu thanh gỗ / năm",
+      "products": [
+        "Gỗ"
+      ],
+      "createdAt": "2025-11-10T09:43:14.670Z",
+      "updatedAt": "2025-11-10T10:36:57.820Z",
+      "verifiedAt": "2025-11-10T10:36:57.180Z"
+    }
+  ],
+  "services": [
+    {
+      "id": "svc-1",
+      "supplierId": "supp-1",
+      "serviceType": "recruitment",
+      "title": "Dịch vụ tuyển dụng nhân sự kỹ thuật",
+      "description": "Cung cấp nhân sự kỹ thuật, quản lý sản xuất cho các KCN phía Nam.",
+      "izIds": [
+        "iz-1",
+        "iz-3"
+      ],
+      "priceRange": {
+        "min": 8000000,
+        "max": 15000000,
+        "unit": "tháng"
+      },
+      "verificationStatus": "verified",
+      "verifiedBy": "user-1",
+      "isStrategicPartner": true,
+      "createdAt": "2024-02-01T00:00:00Z",
+      "updatedAt": "2024-03-02T00:00:00Z"
+    },
+    {
+      "id": "svc-2",
+      "supplierId": "supp-2",
+      "serviceType": "logistics",
+      "title": "Giải pháp Logistics Chuỗi lạnh",
+      "description": "Dịch vụ vận chuyển và lưu kho lạnh cho ngành thực phẩm và dược phẩm.",
+      "izIds": [
+        "iz-1",
+        "iz-2"
+      ],
+      "priceRange": {
+        "min": 1000000,
+        "max": 5000000,
+        "unit": "container"
+      },
+      "verificationStatus": "verified",
+      "verifiedBy": "user-1",
+      "isStrategicPartner": false,
+      "createdAt": "2024-02-05T00:00:00Z",
+      "updatedAt": "2024-02-28T00:00:00Z"
+    },
+    {
+      "id": "svc-3",
+      "supplierId": "supp-3",
+      "serviceType": "energy",
+      "title": "Tư vấn chuyển đổi năng lượng xanh",
+      "description": "Thiết kế, tích hợp hệ thống năng lượng tái tạo cho các nhà máy trong KCN.",
+      "izIds": [
+        "iz-3"
+      ],
+      "priceRange": {
+        "min": 30000000,
+        "max": 120000000,
+        "unit": "dự án"
+      },
+      "verificationStatus": "pending",
+      "isStrategicPartner": false,
+      "createdAt": "2024-02-10T00:00:00Z",
+      "updatedAt": "2024-02-26T00:00:00Z"
+    }
+  ],
+  "connectionRequests": [],
+  "industrialZones": [
+    {
+      "id": "iz-1",
+      "userId": "user-2",
+      "regionId": "region-3",
+      "name": "Khu Công Nghiệp Đông Nam Á",
+      "address": "Đường D1, TP. Thuận An, Bình Dương",
+      "province": "Bình Dương",
+      "district": "Thuận An",
+      "latitude": 10.9035,
+      "longitude": 106.7692,
+      "area": 850,
+      "establishedYear": 2015,
+      "owner": "Tổng Công ty Becamex IDC",
+      "industries": [
+        "Điện tử",
+        "Cơ khí",
+        "Logistics"
+      ],
+      "description": "Khu công nghiệp đa ngành trọng điểm phía Nam với hạ tầng hiện đại, đáp ứng tiêu chuẩn quốc tế.",
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-03-01T00:00:00Z",
+      "verifiedBy": "user-1",
+      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "esgStatus": "all",
+      "digitalTransformation": true,
+      "contactEmail": "info@dongnama-iz.vn",
+      "contactPhone": "0274-1234567",
+      "website": "https://dongnama-iz.vn",
+      "totalCompanies": 120,
+      "totalEmployees": 48000,
+      "facilities": [
+        "Hải quan tại chỗ",
+        "Ký túc xá công nhân",
+        "Hệ thống xử lý nước thải",
+        "Trung tâm logistics"
+      ],
+      "clusterIds": [
+        "cluster-1",
+        "cluster-2"
+      ],
+      "createdAt": "2024-01-05T00:00:00Z",
+      "updatedAt": "2024-03-01T00:00:00Z"
+    },
+    {
+      "id": "iz-2",
+      "userId": "user-4",
+      "regionId": "region-1",
+      "name": "Khu Công Nghiệp VSIP Bắc Ninh",
+      "address": "Xã Phù Chẩn, TX. Từ Sơn, Bắc Ninh",
+      "province": "Bắc Ninh",
+      "district": "Từ Sơn",
+      "latitude": 21.1125,
+      "longitude": 105.9758,
+      "area": 700,
+      "establishedYear": 2010,
+      "owner": "Liên doanh VSIP JV",
+      "industries": [
+        "Điện tử",
+        "Dệt may",
+        "Logistics"
+      ],
+      "description": "KCN VSIP Bắc Ninh là điểm đến của các tập đoàn công nghệ cao, hạ tầng hoàn chỉnh, gần Hà Nội.",
+      "verificationStatus": "verified",
+      "verifiedAt": "2024-02-10T00:00:00Z",
+      "verifiedBy": "user-1",
+      "esgStatus": "environmental",
+      "digitalTransformation": true,
+      "contactEmail": "contact@vsipbacninh.vn",
+      "contactPhone": "0222-7654321",
+      "website": "https://vsip.com.vn",
+      "totalCompanies": 95,
+      "totalEmployees": 38000,
+      "facilities": [
+        "Trung tâm logistics",
+        "Hệ thống xử lý nước thải",
+        "Khu lưu trú chuyên gia"
+      ],
+      "clusterIds": [
+        "cluster-3"
+      ],
+      "createdAt": "2024-01-07T00:00:00Z",
+      "updatedAt": "2024-02-10T00:00:00Z"
+    },
+    {
+      "id": "iz-3",
+      "userId": "user-5",
+      "regionId": "region-2",
+      "name": "Khu Công Nghiệp Hòa Khánh",
+      "address": "Quận Liên Chiểu, TP. Đà Nẵng",
+      "province": "Đà Nẵng",
+      "district": "Liên Chiểu",
+      "latitude": 16.0903,
+      "longitude": 108.1504,
+      "area": 420,
+      "establishedYear": 2012,
+      "owner": "Công ty Phát triển KCN Đà Nẵng",
+      "industries": [
+        "Logistics",
+        "Năng lượng",
+        "Chế biến thực phẩm"
+      ],
+      "description": "KCN Hòa Khánh nằm gần cảng Liên Chiểu, thuận tiện giao thương quốc tế và khu vực miền Trung.",
+      "verificationStatus": "pending",
+      "esgStatus": "social",
+      "digitalTransformation": false,
+      "contactEmail": "support@hoakhanh-iz.vn",
+      "contactPhone": "0236-4567890",
+      "website": "https://hoakhanh-iz.vn",
+      "totalCompanies": 65,
+      "totalEmployees": 22000,
+      "facilities": [
+        "Trạm điện 110kV",
+        "Hệ thống xử lý nước thải",
+        "Trung tâm đào tạo nhân lực"
+      ],
+      "clusterIds": [
+        "cluster-4"
+      ],
+      "createdAt": "2024-01-09T00:00:00Z",
+      "updatedAt": "2024-02-20T00:00:00Z"
+    }
+  ]
+}

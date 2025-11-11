@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockServices } from '@/lib/mockData';
+import {
+  addService,
+  getAllServices,
+} from '@/lib/mockStore';
+import type { Service } from '@/types/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,17 +11,18 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const search = searchParams.get('search');
 
-    let services = [...mockServices];
+    const services = await getAllServices();
 
-    // Filter by type
+    let filtered = [...services];
+
     if (type && type !== 'all') {
-      services = services.filter(s => s.serviceType === type);
+      filtered = filtered.filter(s => s.serviceType === type);
     }
 
     // Filter by search
     if (search) {
       const searchLower = search.toLowerCase();
-      services = services.filter(s =>
+      filtered = filtered.filter(s =>
         s.title.toLowerCase().includes(searchLower) ||
         s.description.toLowerCase().includes(searchLower)
       );
@@ -25,9 +30,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: services,
+      data: filtered,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -38,34 +43,39 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Create new service (mock)
-    const newService = {
+    const nowISO = new Date().toISOString();
+
+    const newService: Service = {
       id: `svc-${Date.now()}`,
-      supplierId: 'supp-1', // Mock supplier ID
+      supplierId: body.supplierId || 'supp-1',
       serviceType: body.serviceType,
       title: body.title,
-      description: body.description,
-      priceRange: body.priceMin && body.priceMax ? {
-        min: parseInt(body.priceMin),
-        max: parseInt(body.priceMax),
-        unit: body.priceUnit || 'dự án',
-      } : undefined,
-      verificationStatus: 'pending' as const,
-      isStrategicPartner: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      description: body.description || '',
+      izIds: Array.isArray(body.izIds) ? body.izIds : undefined,
+      clusterIds: Array.isArray(body.clusterIds) ? body.clusterIds : undefined,
+      priceRange:
+        body.priceMin && body.priceMax
+          ? {
+              min: typeof body.priceMin === 'number' ? body.priceMin : parseInt(body.priceMin, 10),
+              max: typeof body.priceMax === 'number' ? body.priceMax : parseInt(body.priceMax, 10),
+              unit: body.priceUnit || 'dự án',
+            }
+          : undefined,
+      verificationStatus: 'pending',
+      verifiedBy: undefined,
+      isStrategicPartner: Boolean(body.isStrategicPartner),
+      createdAt: nowISO,
+      updatedAt: nowISO,
     };
 
-    // In real app, save to database
-    // mockServices.push(newService);
+    const created = await addService(newService);
 
     return NextResponse.json({
       success: true,
-      data: newService,
+      data: created,
       message: 'Service registered successfully',
     }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

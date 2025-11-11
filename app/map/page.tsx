@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Search, Filter, MapPin, CheckCircle, Clock, Factory as FactoryIcon, Plus, Layers, ZoomIn, ZoomOut, Network, Building2 } from 'lucide-react';
+import { Search, Filter, MapPin, Factory as FactoryIcon, Plus, Layers, Network, Building2 } from 'lucide-react';
 import IZCard from '@/components/IZCard';
 import { IndustrialZone, Factory, Cluster, Region, TopologyLevel } from '@/types/database';
-import { getFactoriesByIZId, mockFactories, mockClusters, mockRegions } from '@/lib/mockData';
+import { mockFactories, mockClusters, mockRegions } from '@/lib/mockData';
 import Link from 'next/link';
 
 // Dynamic import để tránh SSR issues với Leaflet
@@ -31,23 +31,36 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch IZs from API
-    fetch('/api/industrial-zones')
-      .then(res => res.json())
-      .then(data => {
-        setIZs(data.data || []);
-        
-        // Load all factories
-        setFactories(mockFactories);
-        
-        // Load all clusters
+    let cancelled = false;
+
+    const loadData = async () => {
+      if (!cancelled) {
+        setLoading(true);
+      }
+
+      try {
+        const [izResponse, factoryResponse] = await Promise.all([
+          fetch('/api/industrial-zones').then(res => res.json()).catch(() => ({ data: [] })),
+          fetch('/api/factories').then(res => res.json()).catch(() => ({ data: [] })),
+        ]);
+
+        if (cancelled) return;
+
+        setIZs(Array.isArray(izResponse.data) ? izResponse.data : []);
+        setFactories(Array.isArray(factoryResponse.data) ? factoryResponse.data : mockFactories);
         setClusters(mockClusters);
-        
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Get unique provinces

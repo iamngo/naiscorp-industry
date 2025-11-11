@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock connection requests storage (in real app, use database)
-let mockConnectionRequests: any[] = [];
+import {
+  addConnectionRequest,
+  getAllConnectionRequests,
+} from '@/lib/mockStore';
+import type { ConnectionRequest } from '@/types/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,25 +11,26 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
 
-    let requests = [...mockConnectionRequests];
+    const requests = await getAllConnectionRequests();
+    let filtered = [...requests];
 
     // Filter by userId
     if (userId) {
-      requests = requests.filter(
+      filtered = filtered.filter(
         r => r.fromUserId === userId || r.toUserId === userId
       );
     }
 
     // Filter by status
     if (status) {
-      requests = requests.filter(r => r.status === status);
+      filtered = filtered.filter(r => r.status === status);
     }
 
     return NextResponse.json({
       success: true,
-      data: requests,
+      data: filtered,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -39,28 +42,28 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Create new connection request (mock)
-    const newRequest = {
+    const nowISO = new Date().toISOString();
+
+    const newRequest: ConnectionRequest = {
       id: `conn-${Date.now()}`,
-      fromUserId: 'user-current', // Mock current user
-      fromRole: 'investor' as const, // Mock role
+      fromUserId: body.fromUserId || 'user-current',
+      fromRole: body.fromRole || 'investor',
       toUserId: body.toUserId,
       toRole: body.toRole,
       message: body.message || '',
-      status: 'pending' as const,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      status: 'pending',
+      createdAt: nowISO,
+      updatedAt: nowISO,
     };
 
-    // In real app, save to database
-    mockConnectionRequests.push(newRequest);
+    const created = await addConnectionRequest(newRequest);
 
     return NextResponse.json({
       success: true,
-      data: newRequest,
+      data: created,
       message: 'Connection request sent successfully',
     }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

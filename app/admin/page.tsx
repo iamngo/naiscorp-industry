@@ -1,50 +1,85 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { mockIndustrialZones, getVerifiedIZs, mockFactories, mockProducts, mockServices } from '@/lib/mockData';
-import { Shield, CheckCircle, Clock, X, TrendingUp, Users, Building2, BarChart3, Filter, Factory as FactoryIcon, Package, Briefcase } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { mockFactories, mockProducts, mockServices } from '@/lib/mockData';
+import { Shield, CheckCircle, Clock, X, Building2, Filter } from 'lucide-react';
 import { IndustrialZone, Factory, Product, Service } from '@/types/database';
 
 export default function AdminDashboard() {
   const [izs, setIZs] = useState<IndustrialZone[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => mockProducts.map(product => ({ ...product })));
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified'>('all');
   const [activeTab, setActiveTab] = useState<'iz' | 'factory' | 'services' | 'products'>('iz');
 
-  useEffect(() => {
-    fetch('/api/industrial-zones')
-      .then(res => res.json())
-      .then(data => {
-        setIZs(data.data || []);
-      })
-      .catch(() => {});
-
-    // Load factories
-    fetch('/api/factories')
-      .then(res => res.json())
-      .then(data => {
-        setFactories(data.data || []);
-      })
-      .catch(() => {});
-
-    // Load products
-    setProducts(mockProducts);
-
-    // Load services
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => {
-        setServices(data.data || []);
-      })
-      .catch(() => {
-        setServices(mockServices);
-      });
-
-    setLoading(false);
+  const fetchIZs = useCallback(async () => {
+    const response = await fetch('/api/industrial-zones', {
+      cache: 'no-store',
+    }).catch(() => null);
+    if (!response || !response.ok) {
+      return [];
+    }
+    const json = await response.json();
+    return Array.isArray(json?.data) ? json.data : [];
   }, []);
+
+  const fetchFactories = useCallback(async () => {
+    const response = await fetch('/api/factories', {
+      cache: 'no-store',
+    }).catch(() => null);
+    if (!response || !response.ok) {
+      return mockFactories;
+    }
+    const json = await response.json();
+    return Array.isArray(json?.data) ? json.data : mockFactories;
+  }, []);
+
+  const fetchServices = useCallback(async () => {
+    const response = await fetch('/api/services', {
+      cache: 'no-store',
+    }).catch(() => null);
+    if (!response || !response.ok) {
+      return mockServices;
+    }
+    const json = await response.json();
+    return Array.isArray(json?.data) ? json.data : mockServices;
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDashboardData = async () => {
+      if (!cancelled) {
+        setLoading(true);
+      }
+
+      try {
+        const [izData, factoryData, serviceData] = await Promise.all([
+          fetchIZs(),
+          fetchFactories(),
+          fetchServices(),
+        ]);
+
+        if (cancelled) return;
+
+        setIZs(izData);
+        setFactories(factoryData);
+        setServices(serviceData);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDashboardData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchFactories, fetchIZs, fetchServices]);
 
   const handleVerify = async (izId: string, status: 'verified' | 'rejected') => {
     try {
@@ -59,16 +94,21 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         const data = await res.json();
-        setIZs(izs.map(iz => iz.id === izId ? data.data : iz));
+        setIZs(prev =>
+          prev.map(iz => (iz.id === izId && data?.data ? data.data : iz)),
+        );
+        const latestIZs = await fetchIZs();
+        setIZs(latestIZs);
         alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} khu công nghiệp (mock data)`);
       }
-    } catch (error) {
+    } catch {
       alert('Có lỗi xảy ra');
     }
   };
 
   const handleVerifyFactory = async (factoryId: string, status: 'verified' | 'rejected') => {
     try {
+      console.log('[AdminDashboard] verify factory', { factoryId, status });
       const res = await fetch(`/api/factories/${factoryId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -78,12 +118,27 @@ export default function AdminDashboard() {
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setFactories(factories.map(f => f.id === factoryId ? data.data : f));
-        alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} nhà máy (mock data)`);
+      if (!res.ok) {
+        const errorPayload = await res.json().catch(() => ({}));
+        console.error('[AdminDashboard] verify factory failed', {
+          statusCode: res.status,
+          errorPayload,
+        });
+        alert('Có lỗi xảy ra khi cập nhật trạng thái nhà máy');
+        return;
       }
+
+      const data = await res.json();
+      console.log('[AdminDashboard] verify factory success', data);
+      setFactories(prev =>
+        prev.map(f => (f.id === factoryId && data?.data ? data.data : f)),
+      );
+      const latestFactories = await fetchFactories();
+      console.log('[AdminDashboard] factories reloaded after verify', latestFactories);
+      setFactories(latestFactories);
+      alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} nhà máy (mock data)`);
     } catch (error) {
+      console.error('[AdminDashboard] verify factory exception', error);
       alert('Có lỗi xảy ra');
     }
   };
@@ -103,7 +158,7 @@ export default function AdminDashboard() {
           : p
       ));
       alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} sản phẩm (mock data)`);
-    } catch (error) {
+    } catch {
       alert('Có lỗi xảy ra');
     }
   };
@@ -121,10 +176,14 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         const data = await res.json();
-        setServices(services.map(s => s.id === serviceId ? data.data : s));
+        setServices(prev =>
+          prev.map(s => (s.id === serviceId && data?.data ? data.data : s)),
+        );
+        const latestServices = await fetchServices();
+        setServices(latestServices);
         alert(`Đã ${status === 'verified' ? 'xác thực' : 'từ chối'} dịch vụ (mock data)`);
       }
-    } catch (error) {
+    } catch {
       alert('Có lỗi xảy ra');
     }
   };
@@ -141,9 +200,13 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         const data = await res.json();
-        setServices(services.map(s => s.id === serviceId ? data.data : s));
+        setServices(prev =>
+          prev.map(s => (s.id === serviceId && data?.data ? data.data : s)),
+        );
+        const latestServices = await fetchServices();
+        setServices(latestServices);
       }
-    } catch (error) {
+    } catch {
       alert('Có lỗi xảy ra');
     }
   };

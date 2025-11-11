@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockFactories } from '@/lib/mockData';
+import {
+  addFactory,
+  getAllFactories,
+} from '@/lib/mockStore';
+import type { Factory } from '@/types/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,28 +12,29 @@ export async function GET(request: NextRequest) {
     const clusterId = searchParams.get('clusterId');
     const verificationStatus = searchParams.get('verificationStatus');
 
-    let factories = [...mockFactories];
+    const factories = await getAllFactories();
 
+    let filtered = [...factories];
     // Filter by izId
     if (izId) {
-      factories = factories.filter(f => f.izId === izId);
+      filtered = filtered.filter(f => f.izId === izId);
     }
 
     // Filter by clusterId
     if (clusterId) {
-      factories = factories.filter(f => f.clusterId === clusterId);
+      filtered = filtered.filter(f => f.clusterId === clusterId);
     }
 
     // Filter by verificationStatus
     if (verificationStatus) {
-      factories = factories.filter(f => f.verificationStatus === verificationStatus);
+      filtered = filtered.filter(f => f.verificationStatus === verificationStatus);
     }
 
     return NextResponse.json({
       success: true,
-      data: factories,
+      data: filtered,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -40,42 +45,46 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Create new factory (mock)
-    const newFactory = {
+    const nowISO = new Date().toISOString();
+
+    const newFactory: Factory = {
       id: `factory-${Date.now()}`,
-      userId: 'user-2', // Mock user ID
+      userId: 'user-2',
       izId: body.izId,
       clusterId: body.clusterId || undefined,
       name: body.name,
       lotNumber: body.lotNumber || undefined,
       address: body.address,
-      latitude: body.latitude,
-      longitude: body.longitude,
-      industries: body.industries || [],
-      description: body.description,
-      verificationStatus: 'pending' as const,
+      latitude: typeof body.latitude === 'number' ? body.latitude : parseFloat(body.latitude) || 0,
+      longitude: typeof body.longitude === 'number' ? body.longitude : parseFloat(body.longitude) || 0,
+      industries: Array.isArray(body.industries) ? body.industries : [],
+      description: body.description || '',
+      verificationStatus: 'pending',
+      verifiedAt: undefined,
+      verifiedBy: undefined,
       videoUrl: body.videoUrl || undefined,
+      documentUrls: Array.isArray(body.documentUrls) ? body.documentUrls : undefined,
       esgStatus: body.esgStatus || 'none',
-      digitalTransformation: body.digitalTransformation || false,
-      contactEmail: body.contactEmail,
-      contactPhone: body.contactPhone,
+      digitalTransformation: Boolean(body.digitalTransformation),
+      contactEmail: body.contactEmail || '',
+      contactPhone: body.contactPhone || '',
       website: body.website || undefined,
       productionCapacity: body.productionCapacity || undefined,
-      products: body.products || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      products: Array.isArray(body.products) ? body.products : [],
+      linkedBuyerIds: Array.isArray(body.linkedBuyerIds) ? body.linkedBuyerIds : undefined,
+      linkedSupplierIds: Array.isArray(body.linkedSupplierIds) ? body.linkedSupplierIds : undefined,
+      createdAt: nowISO,
+      updatedAt: nowISO,
     };
 
-    // In real app, save to database
-    // mockFactories.push(newFactory);
+    const created = await addFactory(newFactory);
 
     return NextResponse.json({
       success: true,
-      data: newFactory,
+      data: created,
       message: 'Factory registered successfully',
     }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

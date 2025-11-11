@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIZById } from '@/lib/mockData';
+import {
+  getIndustrialZone,
+  updateIndustrialZone,
+  deleteIndustrialZone,
+} from '@/lib/mockStore';
+
+type IndustrialZoneRouteContext = {
+  params: Promise<{ id: string }>;
+};
 
 // GET /api/industrial-zones/[id] - Get IZ by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: IndustrialZoneRouteContext,
 ) {
   try {
-    const iz = getIZById(params.id);
+    const { id } = await context.params;
+    const iz = await getIndustrialZone(id);
 
     if (!iz) {
       return NextResponse.json(
@@ -18,6 +27,7 @@ export async function GET(
 
     return NextResponse.json({ data: iz });
   } catch (error) {
+    console.error('[API] get industrial zone failed', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -28,11 +38,12 @@ export async function GET(
 // PUT /api/industrial-zones/[id] - Update IZ
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: IndustrialZoneRouteContext,
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
-    const iz = getIZById(params.id);
+    const iz = await getIndustrialZone(id);
 
     if (!iz) {
       return NextResponse.json(
@@ -41,15 +52,14 @@ export async function PUT(
       );
     }
 
-    // Mock update
-    const updatedIZ = {
-      ...iz,
+    const updated = await updateIndustrialZone(id, {
       ...body,
       updatedAt: new Date().toISOString(),
-    };
+    });
 
-    return NextResponse.json({ data: updatedIZ });
+    return NextResponse.json({ data: updated });
   } catch (error) {
+    console.error('[API] update industrial zone failed', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -60,21 +70,22 @@ export async function PUT(
 // DELETE /api/industrial-zones/[id] - Delete IZ
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: IndustrialZoneRouteContext,
 ) {
   try {
-    const iz = getIZById(params.id);
+    const { id } = await context.params;
+    const deleted = await deleteIndustrialZone(id);
 
-    if (!iz) {
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Industrial zone not found' },
         { status: 404 }
       );
     }
 
-    // Mock delete
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('[API] delete industrial zone failed', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

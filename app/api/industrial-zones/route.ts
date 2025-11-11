@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockIndustrialZones, getVerifiedIZs } from '@/lib/mockData';
+import { addIndustrialZone, getAllIndustrialZones } from '@/lib/mockStore';
 
 // GET /api/industrial-zones - List all IZs with filters
 export async function GET(request: NextRequest) {
@@ -11,9 +11,10 @@ export async function GET(request: NextRequest) {
     const esg = searchParams.get('esg');
     const digitalTransformation = searchParams.get('digitalTransformation');
 
-    let filtered = verified === 'true' 
-      ? getVerifiedIZs() 
-      : mockIndustrialZones;
+    const allIZs = await getAllIndustrialZones();
+    let filtered = verified === 'true'
+      ? allIZs.filter(iz => iz.verificationStatus === 'verified')
+      : allIZs;
 
     if (province) {
       filtered = filtered.filter(iz => iz.province === province);
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
       total: filtered.length,
     });
   } catch (error) {
+    console.error('[API] list industrial zones failed', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Mock create - trong production sẽ lưu vào database
+    const now = new Date().toISOString();
     const newIZ = {
       id: `iz-${Date.now()}`,
       userId: body.userId || 'user-2', // Mock user ID if not provided
@@ -76,16 +79,19 @@ export async function POST(request: NextRequest) {
       totalEmployees: body.totalEmployees || 0,
       facilities: body.facilities || [],
       clusterIds: body.clusterIds || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
+
+    const persisted = await addIndustrialZone(newIZ);
 
     return NextResponse.json({ 
       success: true,
-      data: newIZ,
+      data: persisted,
       message: 'IZ registered successfully'
     }, { status: 201 });
   } catch (error) {
+    console.error('[API] create industrial zone failed', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
